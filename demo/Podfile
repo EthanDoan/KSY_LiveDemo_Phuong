@@ -1,0 +1,11 @@
+# Uncomment the next line to define a global platform for your project
+# platform :ios, '9.0'
+
+target 'KSYLiveDemo'  do
+
+pod 'Bugly'
+pod 'GPUImage'
+pod 'libksygpulive/KSYGPUResource'
+pod 'libksygpulive/libksygpulive'
+
+end
