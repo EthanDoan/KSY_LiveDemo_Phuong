@@ -77,14 +77,15 @@ typedef NS_ENUM(NSInteger, KSYDemoMenuType){
     //添加开始按钮
     _buttonDone = [self addButton:@"Start"];
     self.view.backgroundColor = [UIColor whiteColor];
+    
 //    NSString * uuidStr =[[[UIDevice currentDevice] identifierForVendor] UUIDString];
 //    NSString *devCode  = [[uuidStr substringToIndex:3] lowercaseString];
     //推流地址
 //    NSString *streamSrv  = @"rtmp://mobile.kscvbu.cn/live";
 //    NSString *streamUrl      = [ NSString stringWithFormat:@"%@/%@", streamSrv, devCode];
     
+    //your rtmp link to streaming to:
     NSString *streamUrl = @"rtmp://a.rtmp.youtube.com/live2/m1zh-e727-wzaz-3fuk";
-    
     _arrayStreamAddress = [NSMutableArray arrayWithObjects:streamUrl,nil];
     
     //推流地址对应的拉流地址
