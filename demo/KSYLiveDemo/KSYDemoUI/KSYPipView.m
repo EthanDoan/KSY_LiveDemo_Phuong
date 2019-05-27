@@ -21,18 +21,18 @@
 -(id)init{
     self = [super init];
     _pipStatus  = @"idle";
-    _pipTitle   = [self addLable:@"Picture-in-picture address Documents/movies"];//画中画地址
+    _pipTitle   = [self addLable:@"画中画地址 Documents/movies"];
     _pipTitle.numberOfLines = 2;
     _pipTitle.textAlignment = NSTextAlignmentLeft;
     
     _progressV  = [[UIProgressView alloc] init];
     [self addSubview:_progressV];
-    _pipPlay    = [self addButton:@"Play"];
-    _pipPause   = [self addButton:@"time out"];//暂停
-    _pipStop    = [self addButton:@"stop"];//停止
-    _pipNext    = [self addButton:@"next video file"];//下一个视频文件
-    _bgpNext    = [self addButton:@"Next background image"];//下一个背景图片
-    _volumSl    = [self addSliderName:@"volume" From:0 To:100 Init:50];//音量
+    _pipPlay    = [self addButton:@"播放"];
+    _pipPause   = [self addButton:@"暂停"];
+    _pipStop    = [self addButton:@"停止"];
+    _pipNext    = [self addButton:@"下一个视频文件"];
+    _bgpNext    = [self addButton:@"下一个背景图片"];
+    _volumSl    = [self addSliderName:@"音量" From:0 To:100 Init:50];
     
     _pipPattern = @[@".mp4", @".flv"];
     _bgpPattern = @[@".jpg",@".jpeg", @".png"];

@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 
 #######################
 ## default opt
@@ -16,6 +16,7 @@ PROJECT_BUILD_ROOT=`pwd`
 CONFIGURATION=Release
 PROJECT_NAME=libKSYLive
 BUILD_DIR=build
+INC_DIR=${PROJECT_BUILD_ROOT}/../prebuilt/include/
 
 function print_usage() {
 echo "USAGE:"
@@ -85,9 +86,9 @@ function xDownload() {
     ZIP_FILE=${DST_DIR}/${SUB_DIR}${FILE_NAME}.zip
 
     if [ ! -d "${DST_DIR}/${FILE_NAME}.framework" ]; then
-        echo "download ${FILE_NAME}.framework to ${DST_DIR}"
+        echo "download ${FILE_NAME}.framework(${IOS_URL}) to ${DST_DIR}"
         curl ${IOS_URL} -o ${ZIP_FILE}
-        unzip -q ${ZIP_FILE} -d ${DST_DIR}/
+        unzip -o -q ${ZIP_FILE} -d ${DST_DIR}/
         rm ${ZIP_FILE}
     fi
 }
@@ -97,13 +98,14 @@ if [ $FRAMEWORKNAME = "libksygpulive" ]; then
     if [ ! -d $FRAMEWORK_DIR ]; then
         mkdir $FRAMEWORK_DIR
     fi
-	
-	xDownload GPUImage $TYPE
-	xDownload Bugly    ""
+    
+    xDownload GPUImage $TYPE
+    xDownload Bugly    ""
+    xDownload YYImage  ""
+    xDownload ZipArchive  ""
 fi
 
 TARGET_NAME=$FRAMEWORKNAME
-LOG_F=${TARGET_NAME}_build.log
 
 PLAYER_DEPS="-lksybase -lksyplayer -lksymediacore_dec"
 LIVE_DEPS="-lksybase  -lksyyuv -lksyplayer"
@@ -112,7 +114,7 @@ LIVE_DEPS="${LIVE_DEPS} -lksymediacore_enc -lksymediacore_enc_base"
 LIVE_DEPS_DEV="${LIVE_DEPS} -lksymediacodec"
 LIVE_DEPS_SIM="${LIVE_DEPS}"
 
-LD_FLAGS="-all_load -lstdc++.6 -lz"
+LD_FLAGS="-all_load -lc++ -lz"
 LIB_FLAGS=""
 if [ $FRAMEWORKNAME == "KSYMediaPlayer" ]; then
     LIB_FLAGS_DEV="${LIB_FLAGS} ${PLAYER_DEPS}"
@@ -142,49 +144,63 @@ function xGenConfig() {
 }
 
 function xBuild() {
-PROJ=$1
-TARG=$2
-SDK=$3
+    PROJ=$1
+    TARG=$2
+    SDK=$3
 
-XCODE_BUILD="xcrun xcodebuild"
-XCODE_BUILD="$XCODE_BUILD  -configuration Release"
-XCODE_BUILD="$XCODE_BUILD  -project ${PROJ}.xcodeproj"
-XCODE_BUILD="$XCODE_BUILD  -target  ${TARG}"
-XCODE_BUILD="$XCODE_BUILD  -sdk     ${SDK}"
+    XCODE_BUILD="xcrun xcodebuild -quiet "
+    XCODE_BUILD="$XCODE_BUILD  -configuration Release"
+    XCODE_BUILD="$XCODE_BUILD  -project ${PROJ}.xcodeproj"
+    XCODE_BUILD="$XCODE_BUILD  -target  ${TARG}"
+    XCODE_BUILD="$XCODE_BUILD  -sdk     ${SDK}"
 
-echo "=====  building ${PROJ} - ${TARG} - ${SDK} @ `date` " | tee -a $LOG_F
-xGenConfig ${XCODE_CONFIG}
-$XCODE_BUILD clean build -xcconfig ${XCODE_CONFIG}  >> $LOG_F
+    echo "=====  building ${PROJ} - ${TARG} - ${SDK} @ `date` "
+    xGenConfig ${XCODE_CONFIG}
+    $XCODE_BUILD clean build -xcconfig ${XCODE_CONFIG}
 }
 
 function xUniversal() {
-TARG=$1
-CTYPE=$2
-echo "=====  strip & universal - $1 @ `date` " | tee -a $LOG_F
-DEV_F=${BUILD_DIR}/${CONFIGURATION}-iphoneos/${TARG}.framework
-SIM_F=${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${TARG}.framework
-OUT_D=../../framework/$CTYPE
-if [ ! -d $OUT_D ]; then
-    mkdir -p $OUT_D
-fi
-OUT_F=${OUT_D}/${TARG}.framework
+    TARG=$1
+    
+    echo "=====  strip & universal - $1 @ `date` "
+    DEV_F=${BUILD_DIR}/${CONFIGURATION}-iphoneos/${TARG}.framework
+    SIM_F=${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${TARG}.framework
 
-cp -R ${DEV_F} ${OUT_D}
-$XCODE_STRIP -S "${DEV_F}/${TARG}" 2> /dev/null
-$XCODE_STRIP -S "${SIM_F}/${TARG}" 2> /dev/null
-xcrun lipo -create -output "${OUT_F}/${TARG}" \
-                           "${DEV_F}/${TARG}" \
-                           "${SIM_F}/${TARG}"
-$XCODE_STRIP -S "${OUT_F}/${TARG}"  >> $LOG_F 2>&1
-xcrun lipo -info "${OUT_F}/${TARG}"
-file "${OUT_F}/${TARG}"
+    cp -R ${DEV_F} ${OUT_D}
+    OUT_F=${OUT_D}/${TARG}.framework
+    
+    $XCODE_STRIP -S "${DEV_F}/${TARG}" 2> /dev/null
+    file "${DEV_F}/${TARG}"
+    $XCODE_STRIP -S "${SIM_F}/${TARG}" 2> /dev/null
+    file "${SIM_F}/${TARG}"
+
+    xcrun lipo -create -output "${OUT_F}/${TARG}" \
+                               "${DEV_F}/${TARG}" \
+                               "${SIM_F}/${TARG}"
+    xcrun lipo -info "${OUT_F}/${TARG}"
+    file "${OUT_F}/${TARG}"
 }
 
 cd $PROJECT_NAME
 echo "======================"
 echo "== build framework ==="
 echo "======================"
+mkdir -p ${INC_DIR}/libksygpulive
+
+find ${INC_DIR}/KSYPlayer -name "*.h" | xargs -I {} cp {} ${INC_DIR}/libksygpulive
+find ${INC_DIR}/KSYBase -name "*.h" | xargs -I {} cp {} ${INC_DIR}/libksygpulive
+if [ $FRAMEWORKNAME == "libksygpulive" ]; then
+    find ${INC_DIR} -name "*.h" | xargs -I {} cp {} ${INC_DIR}/libksygpulive
+fi
+
+OUT_D=../../framework/$TYPE
+if [ ! -d $OUT_D ]; then
+    mkdir -p $OUT_D
+fi
 
 xBuild  libKSYLive  $TARGET_NAME iphoneos
 xBuild  libKSYLive  $TARGET_NAME iphonesimulator
-xUniversal $TARGET_NAME $TYPE 
+xUniversal $TARGET_NAME 
+
+cp ${INC_DIR}/libksygpulive/*.h ${OUT_D}/${TARGET_NAME}.framework/Headers/
+rm -rf ${INC_DIR}/libksygpulive

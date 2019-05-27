@@ -71,12 +71,13 @@
 -(void)startPipWithPlayerUrl:( NSURL* _Nullable )playerUrl
                        bgPic:( NSURL* _Nullable )bgUrl
 {
+    if (_player) {
+        [self stopPip];
+    }
+    
     if(playerUrl) {
         [self.aMixer setTrack:_pipTrack enable:YES];
         [self.aMixer setMixVolume:1 of:_pipTrack];
-        if (_player) {
-            [self stopPip];
-        }
         BOOL shouldUseHWCodec = YES;
         BOOL shouldAutoplay = YES;
         BOOL shouldMute = NO;
@@ -163,13 +164,15 @@
 
 // 添加图层到 vMixer 中
 - (void) addPic:(GPUImageOutput*)pic ToMixerAt: (NSInteger)idx{
+    KSYGPUPicMixer * vMixer[2] = {self.vPreviewMixer, self.vStreamMixer};
     if (pic == nil){
+        for (int i = 0; i<2; ++i) {
+            [vMixer[i]  clearPicOfLayer:idx];
+        }
         return;
     }
     [pic removeAllTargets];
-    KSYGPUPicMixer * vMixer[2] = {self.vPreviewMixer, self.vStreamMixer};
     for (int i = 0; i<2; ++i) {
-        [vMixer[i]  clearPicOfLayer:idx];
         [pic addTarget:vMixer[i] atTextureLocation:idx];
     }
 }

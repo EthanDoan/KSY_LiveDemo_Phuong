@@ -82,7 +82,7 @@
  @abstract   预览视图
  @discussion 通过此指针可以对预览视图进行操作
  */
-@property (nonatomic, readonly) GPUImageView          *preview;
+@property (nonatomic, readonly) KSYGPUView          *preview;
 
 /**
  @abstract   采集到的图像上传GPU
@@ -166,6 +166,8 @@ typedef NS_ENUM(NSInteger, KSYAudioCapType){
 @property (nonatomic, readonly) NSInteger logoPicLayer;
 /** logo 文字的图层 */
 @property (nonatomic, readonly) NSInteger logoTxtLayer;
+/** 贴纸的图层 */
+@property (nonatomic, readonly) NSInteger aeLayer;
 
 /** 麦克风通道 */
 @property (nonatomic, readonly) int micTrack;
@@ -401,9 +403,35 @@ FOUNDATION_EXPORT NSString *const KSYCaptureStateDidChangeNotification NS_AVAILA
  @discussion sampleBuffer 原始采集到的音频数据
  @discussion 对sampleBuffer内的pcm数据的修改将传递到观众端
  @discussion 请注意本函数的执行时间，如果太长可能导致不可预知的问题
+ @discussion 当audioDataType 为KSYAudioData_CMSampleBuffer时才会被触发回调
  @discussion 请参考 CMSampleBufferRef
+ @see audioDataType
  */
 @property(nonatomic, copy) void(^audioProcessingCallback)(CMSampleBufferRef sampleBuffer);
+
+/**
+ @abstract   音频处理回调接口
+ @discussion pData len为原始采集到的音频数据
+ @discussion 当audioDataType 为KSYAudioData_RawPCM时才会被触发回调
+ @discussion 请注意本函数的执行时间，如果太长可能导致不可预知的问题
+ @see audioDataType
+ */
+@property(nonatomic, copy) void(^pcmProcessingCallback)(uint8_t** pData, int len, const AudioStreamBasicDescription* fmt, CMTime timeInfo);
+
+/** 音频通路数据类型 */
+typedef NS_ENUM(NSInteger, KSYAudioDataType){
+    /// 音频数据采用CMSampleBuffer传递
+    KSYAudioData_CMSampleBuffer,
+    /// 音频数据直接使用原始的PCM数据指针传递
+    KSYAudioData_RawPCM,
+};
+
+/**
+ @abstract   音频处理通路数据类型 (默认为 KSYAudioData_CMSampleBuffer)
+ @discussion 音频数据转为 CMSampleBuffer时有格式开销, 使用RawPCM资源消耗会少一些
+ @discussion 内部组件对KSYAudioData_RawPCM可能不完善, 目前仅保证基本通路能工作
+ */
+@property (nonatomic, assign)   KSYAudioDataType    audioDataType;
 
 /**
  @abstract   摄像头采集被打断的消息通知
@@ -461,16 +489,44 @@ FOUNDATION_EXPORT NSString *const KSYCaptureStateDidChangeNotification NS_AVAILA
  @abstract   水印logo的图片
  @discussion 设置为nil为清除水印图片
  @discussion 请注意背景图片的尺寸, 太大的图片会导致内存占用过高
- @see
  */
-@property (nonatomic, readwrite) GPUImagePicture      *logoPic;
+@property (nonatomic, readwrite) KSYGPUPicture      *logoPic;
+
+/**
+ 设置水印图片的朝向
+
+ @param orien 图片的朝向
+ */
+- (void) setLogoOrientaion:(UIImageOrientation) orien;
+
+/**
+ 设置指定图层的朝向
+
+ @param orien 目标朝向
+ @param idx 图层的index
+ */
+- (void) setOrientaion:(UIImageOrientation) orien ofLayer:(NSInteger)idx;
+
+/**
+ 设置指定图层的大小和位置
+
+ @param rect 位置+大小
+ @param idx 指定图层的index
+ */
+- (void) setRect:(CGRect) rect ofLayer:(NSInteger)idx;
 
 /**
  @abstract   文字内容的图片
  @discussion 设置为nil为清除内容图片
- @see
  */
-@property (nonatomic, readwrite) GPUImagePicture      *textPic;
+@property (nonatomic, readwrite) KSYGPUPicture      *textPic;
+
+/**
+ @abstract   贴纸的图片
+ @discussion 设置为nil为清除贴纸图片
+ */
+@property (nonatomic, readwrite) GPUImageUIElement      *aePic;
+
 
 /**
  @abstract   水印logo的图片的位置和大小
@@ -483,7 +539,6 @@ FOUNDATION_EXPORT NSString *const KSYCaptureStateDidChangeNotification NS_AVAILA
 /**
  @abstract   水印logo的图片的位置
  @discussion alpha为透明度(0-1),0完全透明，1完全不透明
- @see
  */
 @property (nonatomic, readwrite) CGFloat              logoAlpha;
 
@@ -514,6 +569,8 @@ FOUNDATION_EXPORT NSString *const KSYCaptureStateDidChangeNotification NS_AVAILA
  */
 - (void) updateTextLabel;
 
+#pragma mark - camera
+
 /**
  @abstract   当前采集设备是否支持自动变焦
  @param      point相机对焦的位置
@@ -535,6 +592,13 @@ FOUNDATION_EXPORT NSString *const KSYCaptureStateDidChangeNotification NS_AVAILA
  */
 @property (nonatomic, assign)   CGFloat pinchZoomFactor;
 
+/**
+ @abstract   摄像头防抖模式，切换摄像头后需要进行重新设置
+ @discussion (iPhone前置摄像头不支持防抖功能)
+ */
+@property (nonatomic, assign) AVCaptureVideoStabilizationMode stabilizationMode;
+
+#pragma mark - profiles
 /**
  @abstract 推流前profile类型
  */
@@ -561,6 +625,7 @@ typedef NS_ENUM(NSInteger, KSYStreamerProfile) {
  @discussion 选择profile类型后, 采集和编码参数会自动配置进去, 默认的profile类型是KSYStreamerProfile_540p_3
  */
 @property (nonatomic, assign)   KSYStreamerProfile streamerProfile;
+
 
 #pragma mark - message
 

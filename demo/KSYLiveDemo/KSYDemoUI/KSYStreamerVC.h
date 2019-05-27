@@ -19,6 +19,8 @@
 #import "KSYAudioCtrlView.h"
 #import "KSYMiscView.h"
 #import "KSYStateLableView.h"
+#import "KSYDecalBGView.h"
+#import "KSYCollectionView.h"
 
 #import <libksygpulive/KSYGPUStreamerKit.h>
 
@@ -55,22 +57,27 @@
 @property (nonatomic, readonly) KSYAudioCtrlView * audioView;
 /// 其他功能配置页面
 @property (nonatomic, readonly) KSYMiscView   *miscView;
+//贴纸页面
+@property (nonatomic, readonly)KSYCollectionView *colView;
+//所有decal添加到该view上
+@property (nonatomic, readonly) KSYDecalBGView *decalBGView;
 
 #pragma mark - preview rotation
 /// 预览视图父控件（用于处理转屏，保持画面相对手机静止）
-@property (nonatomic, strong) UIView *bgView;
 @property (nonatomic, strong) UITraitCollection *curCollection;
 
 #pragma mark - kit instance
 @property (nonatomic, retain) KSYGPUStreamerKit * kit;
+// 适配iphoneX用到的背景视图(在iphoneX上为了保持主播和观众的画面一致, 竖屏时需要上下填一点黑边, 不再全屏预览)
+@property (nonatomic, readonly) UIView* bgView;
 
-// 推流地址 完整的URL  Push the address to the full URL
+// 推流地址 完整的URL
 @property NSURL * hostURL;
 @property NSMutableDictionary *obsDict;
 
-// 采集的参数设置  Acquired parameter settings
+// 采集的参数设置
 - (void) setCaptureCfg;
-// 推流的参数设置  Push flow parameter setting
+// 推流的参数设置
 - (void) setStreamerCfg;
 
 - (void) initObservers;
@@ -80,6 +87,8 @@
 - (void) addSubViews;
 - (void) onMenuBtnPress:(UIButton *)btn;
 - (void) onQuit;
+
+- (void) setupLogoRect;
 
 #define SEL_VALUE(SEL_NAME) [NSValue valueWithPointer:@selector(SEL_NAME)]
 

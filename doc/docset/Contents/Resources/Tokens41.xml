@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Tokens version="1.0">
-	<File path="Classes/KSYVideoInfo.html">
+	<File path="Classes/KSYMvFilter.html">
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/cl/KSYVideoInfo</TokenIdentifier>
-			<Abstract type="html">视频信息</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/cl/KSYMvFilter</TokenIdentifier>
+			<Abstract type="html">KSYMvFilter MV效果类</Abstract>
+			<DeclaredIn>KSYMvFilter.h</DeclaredIn>
             
 			
 			<NodeRef refid="41"/>
@@ -13,110 +13,58 @@
 		
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYVideoInfo/setVcodec:</TokenIdentifier>
-			<Abstract type="html">视频编码格式, 具体类型为MEDIAINFOCODECID</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYMvFilter/initWithPath:shouldRepeat:</TokenIdentifier>
+			<Abstract type="html">单个mp4 filter</Abstract>
+			<DeclaredIn>KSYMvFilter.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) MEDIAINFO_CODEC_ID vcodec</Declaration>
-			
-			
-			<Anchor>//api/name/vcodec</Anchor>
+			<Declaration>- (id)initWithPath:(NSURL *)mp4URL shouldRepeat:(BOOL)bRepeat</Declaration>
+			<Parameters>
+				<Parameter>
+					<Name>mp4URL</Name>
+					<Abstract type="html">指定mp4路径</Abstract>
+				</Parameter><Parameter>
+					<Name>shouldRepeat</Name>
+					<Abstract type="html">mp4是否循环播放</Abstract>
+				</Parameter>
+			</Parameters>
+			<ReturnValue><Abstract type="html">mp4 filter</Abstract></ReturnValue>
+			<Anchor>//api/name/initWithPath:shouldRepeat:</Anchor>
             <NodeRef refid="41"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYVideoInfo/vcodec</TokenIdentifier>
-			<Abstract type="html">视频编码格式, 具体类型为MEDIAINFOCODECID</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYMvFilter/MvPause</TokenIdentifier>
+			<Abstract type="html">mv 播放暂停</Abstract>
+			<DeclaredIn>KSYMvFilter.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) MEDIAINFO_CODEC_ID vcodec</Declaration>
+			<Declaration>- (void)MvPause</Declaration>
 			
 			
-			<Anchor>//api/name/vcodec</Anchor>
+			<Anchor>//api/name/MvPause</Anchor>
             <NodeRef refid="41"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instp/KSYVideoInfo/vcodec</TokenIdentifier>
-			<Abstract type="html">视频编码格式, 具体类型为MEDIAINFOCODECID</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYMvFilter/MvResume</TokenIdentifier>
+			<Abstract type="html">mv 播放暂停恢复</Abstract>
+			<DeclaredIn>KSYMvFilter.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) MEDIAINFO_CODEC_ID vcodec</Declaration>
+			<Declaration>- (void)MvResume</Declaration>
 			
 			
-			<Anchor>//api/name/vcodec</Anchor>
+			<Anchor>//api/name/MvResume</Anchor>
             <NodeRef refid="41"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYVideoInfo/setFrame_width:</TokenIdentifier>
-			<Abstract type="html">视频帧宽度</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYMvFilter/closeMvFilter</TokenIdentifier>
+			<Abstract type="html">关闭mv filter</Abstract>
+			<DeclaredIn>KSYMvFilter.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic, assign) int32_t frame_width</Declaration>
-			
-			
-			<Anchor>//api/name/frame_width</Anchor>
-            <NodeRef refid="41"/>
-		</Token>
-		
-		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYVideoInfo/frame_width</TokenIdentifier>
-			<Abstract type="html">视频帧宽度</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
-			
-			<Declaration>@property (nonatomic, assign) int32_t frame_width</Declaration>
+			<Declaration>- (void)closeMvFilter</Declaration>
 			
 			
-			<Anchor>//api/name/frame_width</Anchor>
-            <NodeRef refid="41"/>
-		</Token>
-		
-		<Token>
-			<TokenIdentifier>//apple_ref/occ/instp/KSYVideoInfo/frame_width</TokenIdentifier>
-			<Abstract type="html">视频帧宽度</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
-			
-			<Declaration>@property (nonatomic, assign) int32_t frame_width</Declaration>
-			
-			
-			<Anchor>//api/name/frame_width</Anchor>
-            <NodeRef refid="41"/>
-		</Token>
-		
-		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYVideoInfo/setFrame_height:</TokenIdentifier>
-			<Abstract type="html">视频帧高度</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
-			
-			<Declaration>@property (nonatomic, assign) int32_t frame_height</Declaration>
-			
-			
-			<Anchor>//api/name/frame_height</Anchor>
-            <NodeRef refid="41"/>
-		</Token>
-		
-		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYVideoInfo/frame_height</TokenIdentifier>
-			<Abstract type="html">视频帧高度</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
-			
-			<Declaration>@property (nonatomic, assign) int32_t frame_height</Declaration>
-			
-			
-			<Anchor>//api/name/frame_height</Anchor>
-            <NodeRef refid="41"/>
-		</Token>
-		
-		<Token>
-			<TokenIdentifier>//apple_ref/occ/instp/KSYVideoInfo/frame_height</TokenIdentifier>
-			<Abstract type="html">视频帧高度</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
-			
-			<Declaration>@property (nonatomic, assign) int32_t frame_height</Declaration>
-			
-			
-			<Anchor>//api/name/frame_height</Anchor>
+			<Anchor>//api/name/closeMvFilter</Anchor>
             <NodeRef refid="41"/>
 		</Token>
 		

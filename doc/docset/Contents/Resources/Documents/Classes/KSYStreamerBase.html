@@ -68,6 +68,8 @@
 		
 		<option value="//api/name/bwEstimateMode">bwEstimateMode</option>
 		
+		<option value="//api/name/bypassMp4FastStart">bypassMp4FastStart</option>
+		
 		<option value="//api/name/bypassRecordDuration">bypassRecordDuration</option>
 		
 		<option value="//api/name/bypassRecordErrorCode">bypassRecordErrorCode</option>
@@ -80,6 +82,8 @@
 		
 		<option value="//api/name/bypassRecordURL">bypassRecordURL</option>
 		
+		<option value="//api/name/clientAk">clientAk</option>
+		
 		<option value="//api/name/currentUploadingKbps">currentUploadingKbps</option>
 		
 		<option value="//api/name/droppedVideoFrames">droppedVideoFrames</option>
@@ -91,6 +95,8 @@
 		<option value="//api/name/encodedFrames">encodedFrames</option>
 		
 		<option value="//api/name/encodingFPS">encodingFPS</option>
+		
+		<option value="//api/name/expireDate">expireDate</option>
 		
 		<option value="//api/name/hostURL">hostURL</option>
 		
@@ -179,6 +185,8 @@
 		<option value="//api/name/isStreaming">- isStreaming</option>
 		
 		<option value="//api/name/muteStream:">- muteStream:</option>
+		
+		<option value="//api/name/processAudioData:nbSample:withFormat:timeinfo:">- processAudioData:nbSample:withFormat:timeinfo:</option>
 		
 		<option value="//api/name/processAudioSampleBuffer:">- processAudioSampleBuffer:</option>
 		
@@ -520,7 +528,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv
 			
 			<div class="method-subsection discussion-section">
 				<h4 class="method-subtitle">Discussion</h4>
-				<p>video codec used for encode</p>
+				<p>video codec used for encode</p><p>修改此选项会导致videoEncodePerf值变化</p><p>如果需要定制编码档次, 请在修改videoCodec之后再测设置</p>
 			</div>
 			
 
@@ -531,7 +539,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv
 				<h4 class="method-subtitle">See Also</h4>
 				<ul>
 					
-					<li><code><p><a href="../Constants/KSYVideoCodec.html">KSYVideoCodec</a></p></code></li>
+					<li><code><p><a href="../Constants/KSYVideoCodec.html">KSYVideoCodec</a>,<a href="#//api/name/videoEncodePerf">@property videoEncodePerf</a></p></code></li>
 					
 				</ul>
 			</div>
@@ -859,52 +867,6 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv
 		</div>
 	</div>
 </div><div class="section-method">
-	<a name="//api/name/videoCrf" title="videoCrf"></a>
-	<h3 class="method-title"><code><a href="#//api/name/videoCrf">&nbsp;&nbsp;videoCrf</a></code>
-</h3>
-
-	<div class="method-info">
-		<div class="pointy-thing"></div>
-
-		<div class="method-info-container">
-			
-			
-			<div class="method-subsection brief-description">
-				<p>质量等级（默认:20）</p>
-			</div>
-			
-		    
-
-			<div class="method-subsection method-declaration"><code>@property (nonatomic, assign) int videoCrf</code></div>
-
-		    
-			
-
-			
-
-			
-
-			
-			<div class="method-subsection discussion-section">
-				<h4 class="method-subtitle">Discussion</h4>
-				<p>视频恒定质量等级，范围0～51，值越小，质量越好</p>
-			</div>
-			
-
-			
-
-			
-
-			
-			<div class="method-subsection declared-in-section">
-				<h4 class="method-subtitle">Declared In</h4>
-				<p><code class="declared-in-ref">KSYStreamerBase.h</code></p>
-			</div>
-			
-			
-		</div>
-	</div>
-</div><div class="section-method">
 	<a name="//api/name/maxKeyInterval" title="maxKeyInterval"></a>
 	<h3 class="method-title"><code><a href="#//api/name/maxKeyInterval">&nbsp;&nbsp;maxKeyInterval</a></code>
 </h3>
@@ -1117,7 +1079,53 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv
 			
 			<div class="method-subsection discussion-section">
 				<h4 class="method-subtitle">Discussion</h4>
-				<p>开始录制前设置有效</p>
+				<p>用于指定录制时, 视频编码器码率控制的优先目标</p><p>恒定码率: 最后视频文件的码率更平稳,但复杂场景质量可能差一些</p><p>恒定质量: 最后视频文件的质量更平稳写, 但码率波动要大一些</p><p>开始录制前设置有效, 录制本地文件时有效, 直播不建议修改</p>
+			</div>
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYStreamerBase.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/videoCrf" title="videoCrf"></a>
+	<h3 class="method-title"><code><a href="#//api/name/videoCrf">&nbsp;&nbsp;videoCrf</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>质量等级（默认:20）</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>@property (nonatomic, assign) int videoCrf</code></div>
+
+		    
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection discussion-section">
+				<h4 class="method-subtitle">Discussion</h4>
+				<p>视频恒定质量等级，范围0～51，值越小，质量越好</p><p>当 <a href="#//api/name/recScene">recScene</a> 为 KSYRecScene_ConstantQuality, 且选择软编码器时有效</p>
 			</div>
 			
 
@@ -1146,7 +1154,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv
 			
 			
 			<div class="method-subsection brief-description">
-				<p>视频编码性能档次 ( 默认为 KSYVideoEncodePer_LowPower)</p>
+				<p>视频编码性能档次</p>
 			</div>
 			
 		    
@@ -1163,7 +1171,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv
 			
 			<div class="method-subsection discussion-section">
 				<h4 class="method-subtitle">Discussion</h4>
-				<p>视频质量和设备资源之间的权衡,开始推流前设置有效</p>
+				<p>视频质量和设备资源之间的权衡,开始推流前, videoCodec设置之后,修改有效</p><p>选择软编码的默认为KSYVideoEncodePer_LowPower</p><p>选择Auto或硬编码的默认为KSYVideoEncodePer_HighPerformance</p>
 			</div>
 			
 
@@ -1828,7 +1836,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv
 
 <ul>
 <li>_<a href="#//api/name/videoFPS">videoFPS</a>         = 15;</li>
-<li><em><a href="#//api/name/videoCodec">videoCodec</a>       = <a href="../Constants/KSYVideoCodec.html">KSYVideoCodec</a></em>X264;</li>
+<li><em><a href="#//api/name/videoCodec">videoCodec</a>       = <a href="../Constants/KSYVideoCodec.html">KSYVideoCodec</a></em>AUTO;</li>
 <li>_<a href="#//api/name/audiokBPS">audiokBPS</a>        = 32;</li>
 <li>_<a href="#//api/name/videoInitBitrate">videoInitBitrate</a> = 500;</li>
 <li>_<a href="#//api/name/videoMaxBitrate">videoMaxBitrate</a>  = 800;</li>
@@ -2300,8 +2308,76 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv
 			
 			<div class="method-subsection discussion-section">
 				<h4 class="method-subtitle">Discussion</h4>
-				<p>应当在开始推流前定期调用此接口，与processVideoSampleBuffer 交错进行</p><div class="warning"><p><strong>Warning:</strong> 目前只支持 单通道  S16 格式的PCM数据</p></div>
+				<p>应当在开始推流前定期调用此接口，与processVideoSampleBuffer 交错进行</p><div class="warning"><p><strong>Warning:</strong> 目前只支持 S16 格式的PCM数据</p></div>
 			</div>
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYStreamerBase.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/processAudioData:nbSample:withFormat:timeinfo:" title="processAudioData:nbSample:withFormat:timeinfo:"></a>
+	<h3 class="method-title"><code><a href="#//api/name/processAudioData:nbSample:withFormat:timeinfo:">&ndash;&nbsp;processAudioData:nbSample:withFormat:timeinfo:</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>处理一段音频数据</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>- (void)processAudioData:(uint8_t **)<em>pData</em> nbSample:(int)<em>len</em> withFormat:(const AudioStreamBasicDescription *)<em>fmt</em> timeinfo:(CMTime *)<em>pts</em></code></div>
+
+		    
+			
+			<div class="method-subsection arguments-section parameters">
+				<h4 class="method-subtitle parameter-title">Parameters</h4>
+				<table class="argument-def parameter-def">
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>pData</code></th>
+						<td><p>原始数据指针数组</p></td>
+					</tr>
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>len</code></th>
+						<td><p>数据的长度，单位为字节</p></td>
+					</tr>
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>fmt</code></th>
+						<td><p>原始数据的格式 (必须保证一次推流过程中数据格式不变)</p></td>
+					</tr>
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>pts</code></th>
+						<td><p>原始数据的时间戳</p></td>
+					</tr>
+				
+				</table>
+			</div>
+			
+
+			
+
+			
+
 			
 
 			
@@ -2360,6 +2436,95 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv
 				<h4 class="method-subtitle">Discussion</h4>
 				<p>开始推流后发生相应事件时调用此接口
 @warning</p>
+			</div>
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYStreamerBase.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/clientAk" title="clientAk"></a>
+	<h3 class="method-title"><code><a href="#//api/name/clientAk">&nbsp;&nbsp;clientAk</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>获取当前用户的ak
+@warnning 默认是空的，只有在需要鉴权时，才能获取到</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>@property (nonatomic, assign) NSString *clientAk</code></div>
+
+		    
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYStreamerBase.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/expireDate" title="expireDate"></a>
+	<h3 class="method-title"><code><a href="#//api/name/expireDate">&nbsp;&nbsp;expireDate</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>获取当前SDK过期时间</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>@property (nonatomic, assign) NSDate *expireDate</code></div>
+
+		    
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection discussion-section">
+				<h4 class="method-subtitle">Discussion</h4>
+				<p>为nil时,可以永久使用不会过期
+@warnning sdk自行解析得到, 外部赋值无效</p>
 			</div>
 			
 
@@ -3173,6 +3338,52 @@ eg: /private/var/mobile/Containers/Data/Application/APPID/tmp/test.mp4</p><p>如
 		</div>
 	</div>
 </div><div class="section-method">
+	<a name="//api/name/bypassMp4FastStart" title="bypassMp4FastStart"></a>
+	<h3 class="method-title"><code><a href="#//api/name/bypassMp4FastStart">&nbsp;&nbsp;bypassMp4FastStart</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>mp4文件允许快速启动 (默认NO)</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>@property (nonatomic, assign) BOOL bypassMp4FastStart</code></div>
+
+		    
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection discussion-section">
+				<h4 class="method-subtitle">Discussion</h4>
+				<p>mp4格式的文件中将moov等index信息放到文件开头</p><p>开始录制前设置有效</p><div class="warning"><p><strong>Warning:</strong> 启用此开关会在结束是对文件进行处理, 如果要长时间录制,请关闭本选项</p></div>
+			</div>
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYStreamerBase.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
 	<a name="//api/name/startBypassRecord:" title="startBypassRecord:"></a>
 	<h3 class="method-title"><code><a href="#//api/name/startBypassRecord:">&ndash;&nbsp;startBypassRecord:</a></code>
 </h3>
@@ -3690,7 +3901,7 @@ eg: /private/var/mobile/Containers/Data/Application/APPID/tmp/test.mp4</p><p>如
 				<footer>
 					<div class="footer-copyright">
 						
-						<p class="copyright">Copyright &copy; 2017 Kingsoft. All rights reserved. Updated: 2017-05-31</p>
+						<p class="copyright">Copyright &copy; 2018 Kingsoft. All rights reserved. </p>
 						
 						
 						<p class="generator">Generated by <a href="http://appledoc.gentlebytes.com">appledoc 2.2.1 (build 1334)</a>.</p>

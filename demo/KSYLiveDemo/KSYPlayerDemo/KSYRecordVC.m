@@ -7,6 +7,7 @@
 
 #import "KSYRecordVC.h"
 #import <libksygpulive/KSYUIRecorderKit.h>
+#import <libksygpulive/KSYWeakProxy.h>
 #import <CommonCrypto/CommonDigest.h>
 #import "KSYProgressView.h"
 #import <GPUImage/GPUImage.h>
@@ -20,7 +21,8 @@
 @interface KSYRecordVC () <UITextFieldDelegate>
 @property (strong, nonatomic) NSURL *url;
 @property (strong, nonatomic) KSYMoviePlayerController *player;
-@property  KSYUIRecorderKit* kit;
+@property (strong, nonatomic) KSYUIRecorderKit* kit;
+
 @end
 
 @implementation KSYRecordVC{
@@ -46,8 +48,8 @@
     
     NSString *recordFilePath;//保存路径
     
-    CADisplayLink *displayLink;
     dispatch_queue_t queue;
+    CADisplayLink *_displayLink;
     
     NSInteger recordScheme;
 }
@@ -55,9 +57,8 @@
 - (instancetype)initWithURL:(NSURL *)url {
     if((self = [super init])) {
         self.url = url;
+        recordScheme =  -1;
     }
-    
-    recordScheme =  -1;
     return self;
 }
 
@@ -73,13 +74,13 @@
     videoView.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:videoView];
 
-    btnPlay = [self addButtonWithTitle:@"Play" action:@selector(onPlayVideo:)];//播放
-    btnPause = [self addButtonWithTitle:@"time out" action:@selector(onPauseVideo:)];//暂停
-    btnResume = [self addButtonWithTitle:@"carry on" action:@selector(onResumeVideo:)];//继续
-    btnStop = [self addButtonWithTitle:@"stop" action:@selector(onStopVideo:)];//停止
-    btnQuit = [self addButtonWithTitle:@"drop out" action:@selector(onQuit:)];//退出
-    btnStartRecord = [self addButtonWithTitle:@"start recording screen" action:@selector(onStartRecordVideo:)];//开始录屏
-    btnStopRecord =[self addButtonWithTitle:@"stop recording screen" action:@selector(onStopRecordVideo:)];//停止录屏
+    btnPlay = [self addButtonWithTitle:@"播放" action:@selector(onPlayVideo:)];
+    btnPause = [self addButtonWithTitle:@"暂停" action:@selector(onPauseVideo:)];
+    btnResume = [self addButtonWithTitle:@"继续" action:@selector(onResumeVideo:)];
+    btnStop = [self addButtonWithTitle:@"停止" action:@selector(onStopVideo:)];
+    btnQuit = [self addButtonWithTitle:@"退出" action:@selector(onQuit:)];
+    btnStartRecord = [self addButtonWithTitle:@"开始录屏" action:@selector(onStartRecordVideo:)];
+    btnStopRecord =[self addButtonWithTitle:@"停止录屏" action:@selector(onStopRecordVideo:)];
     btnStartRecord.enabled = NO;
     btnStopRecord.enabled = NO;
 
@@ -91,12 +92,12 @@
     [self.view addSubview:stat];
     
     lableHWCodec = [[UILabel alloc] init];
-    lableHWCodec.text = @"hard decoding";//硬解码
+    lableHWCodec.text = @"硬解码";
     lableHWCodec.textColor = [UIColor lightGrayColor];
     [self.view addSubview:lableHWCodec];
     
     labelVolume = [[UILabel alloc] init];
-    labelVolume.text = @"volume";//音量
+    labelVolume.text = @"音量";
     labelVolume.textColor = [UIColor lightGrayColor];
     [self.view addSubview:labelVolume];
     
@@ -112,11 +113,11 @@
     [self.view addSubview:sliderVolume];
 
     labelRecord = [[UILabel alloc] init];
-    labelRecord.text = @"Record screen program";//录屏方案
+    labelRecord.text = @"录屏方案";
     labelRecord.textColor = [UIColor lightGrayColor];
     [self.view addSubview:labelRecord];
     
-    segRecord = [[UISegmentedControl alloc] initWithItems:@[@"shutdown", @"image mix", @"screenshots"]];//关闭", @"图像混合", @"截屏
+    segRecord = [[UISegmentedControl alloc] initWithItems:@[@"关闭", @"图像混合", @"截屏"]];
     segRecord.selectedSegmentIndex = 0;
     segRecord.layer.cornerRadius = 5;
     segRecord.backgroundColor = [UIColor lightGrayColor];
@@ -314,7 +315,7 @@
     if(recordScheme != KSYPlayerRecord_ScreenShot_Scheme && recordScheme != KSYPlayerRecord_PicMix_Scheme)
     {
         //没有设置录屏模式
-        NSString *message = @"Please select the recording type first!";//请先选择录制类型
+        NSString *message = @"请先选择录制类型!";
         [self toast:message];
         return ;
     }
@@ -591,24 +592,26 @@
 
 - (void)setupTimer
 {
-    if(!displayLink)
+    if(!_displayLink)
     {
         //调用截图方法
-        displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(captureScreen:)];
-        if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0"))
-            //如果系统版本大于等于10.0
-            //设定回调速率
-            displayLink.preferredFramesPerSecond = 15;
-        else
+        KSYWeakProxy *proxy = [KSYWeakProxy proxyWithTarget:self];
+        _displayLink = [CADisplayLink displayLinkWithTarget:proxy selector:@selector(captureScreen:)];
+        if(SYSTEM_VERSION_LESS_THAN(@"1.0")) {//如果系统版本小于10.0
             //设置间隔多少帧调用一次selector 方法
-            displayLink.frameInterval = 4;
-        [displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+            _displayLink.frameInterval = 4;
+        }
+        else {
+            //设定回调速率
+            _displayLink.preferredFramesPerSecond = 15;
+        }
+        [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
     }
 }
 
 - (void)stopTimer
 {
-    [displayLink invalidate];
-    displayLink = nil;
+    [_displayLink invalidate];
+    _displayLink = nil;
 }
 @end

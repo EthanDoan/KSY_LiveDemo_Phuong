@@ -20,13 +20,14 @@
 @implementation KSYBgmView
 -(id)init{
     self = [super init];
-    _bgmTitle   = [self addLable:@"Background music address Documents/bgms"];//背景音乐地址
-    _previousBtn= [self addButton:@"On the first one"];//上一首
-    _playBtn    = [self addButton:@"Play"];//播放
-    _pauseBtn   = [self addButton:@"time out"];//暂停
-    _stopBtn    = [self addButton:@"stop"];//停止
-    _volumSl    = [self addSliderName:@"volume" From:0 To:100 Init:50];//音量
-    _pitchSl    = [self addSliderName:@"tone" From:-3 To:3 Init:0];//音调
+    _bgmTitle   = [self addLable:@"背景音乐地址 Documents/bgms"];
+    _previousBtn= [self addButton:@"上一首"];
+    _playBtn    = [self addButton:@"播放"];
+    _pauseBtn   = [self addButton:@"暂停"];
+    [_pauseBtn setTitle: @"继续" forState: UIControlStateSelected];
+    _stopBtn    = [self addButton:@"停止"];
+    _volumSl    = [self addSliderName:@"音量" From:0 To:100 Init:50];
+    _pitchSl    = [self addSliderName:@"音调" From:-3 To:3 Init:0];
     _pitchSl.precision = 0;
     _pitchSl.slider.enabled = NO;
     _pitchStep  = [[UIStepper alloc] init];
@@ -37,19 +38,22 @@
     [_pitchStep addTarget:self
                    action:@selector(onStep:)
          forControlEvents:UIControlEventValueChanged];
-    _nextBtn    = [self addButton:@"next song"];//下一首
+    _nextBtn    = [self addButton:@"下一首"];
     _bgmStatus  = @"idle";
     _bgmPattern = @[@".mp3", @".m4a", @".aac"];
     _bgmSel     = [[KSYFileSelector alloc] initWithDir:@"/Documents/bgms/"
                                              andSuffix:_bgmPattern];
     _bgmPath    = _bgmSel.filePath;
     _cnt        = _bgmSel.fileList.count;
-    _loopType = [self addSegCtrlWithItems:@[@"single play", @"singel cycle", @"suffle playback",@"loop"]];//单曲播放", @"单曲循环", @"随机播放",@"循环播放
-    _loopType.selectedSegmentIndex = 4;
+    _loopType = [self addSegCtrlWithItems:@[@"单曲播放", @"单曲循环", @"随机播放",@"循环播放"]];
+    _loopType.selectedSegmentIndex = 3;
     _progressBar = [[KSYProgressView alloc] init];
     [self addSubview:_progressBar];
     if (_cnt == 0) {
-        [self downloadBgm];
+        NSString *urlStr = @"https://ks3-cn-beijing.ksyun.com/ksy.vcloud.sdk/Ios/bgm.aac";
+        [_bgmSel downloadFile:urlStr name:@"bgm.aac" ];
+        urlStr = @"https://ks3-cn-beijing.ksyun.com/ksy.vcloud.sdk/Ios/test1.mp3";
+        [_bgmSel downloadFile:urlStr name:@"test1.mp3"];
     }
     return self;
 }
@@ -87,7 +91,9 @@
     return [self updateBgmPath];
 }
 - (NSString*) updateBgmPath{
-    _bgmTitle.text = [_bgmStatus stringByAppendingString:_bgmSel.fileInfo];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        _bgmTitle.text = [_bgmStatus stringByAppendingString:_bgmSel.fileInfo];
+    });
     _bgmPath    = _bgmSel.filePath;
     return _bgmSel.filePath;
 }
@@ -95,8 +101,9 @@
 @synthesize bgmStatus = _bgmStatus;
 - (void) setBgmStatus:(NSString *)bgmStatus{
     _bgmStatus = bgmStatus;
-    _bgmTitle.text = [_bgmStatus stringByAppendingString:_bgmSel.fileInfo];
-    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        _bgmTitle.text = [_bgmStatus stringByAppendingString:_bgmSel.fileInfo];
+    });
 }
 - (NSString *) bgmStatus{
     return _bgmStatus;
@@ -110,38 +117,5 @@
     [_bgmSel reload];
     _bgmPath = _bgmSel.filePath;
     _cnt     = _bgmSel.fileList.count;
-}
-
-- (void) downloadBgm {
-    NSString *urlStr = @"https://ks3-cn-beijing.ksyun.com/ksy.vcloud.sdk/Ios/bgm.aac";
-    urlStr = [urlStr stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
-    NSURL *Url = [NSURL URLWithString:urlStr];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:Url];
-    NSURLSession *session = [NSURLSession sharedSession];
-    NSURLSessionDownloadTask *downLoadTask;
-    weakObj(self);
-    downLoadTask = [session downloadTaskWithRequest:request completionHandler:^(NSURL * _Nullable location, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-        if (!error) {
-            NSError *saveError;
-            NSString * saveDir = [NSHomeDirectory() stringByAppendingString:@"/Documents/bgms"];
-            NSString * savePath = [saveDir stringByAppendingString:@"/bgm.aac"];
-            NSURL *saveURL = [NSURL fileURLWithPath:savePath];
-            NSFileManager * fm = [NSFileManager defaultManager];
-            [fm createDirectoryAtPath:saveDir
-          withIntermediateDirectories:YES
-                           attributes:nil
-                                error:nil];
-            [fm copyItemAtURL:location toURL:saveURL error:&saveError];
-            if (!saveError) {
-                NSLog(@"bgm.aac download successful");//下载成功
-                [selfWeak relaodFile];
-            } else {
-                NSLog(@"error is %@", saveError.localizedDescription);
-            }
-        } else {
-            NSLog(@"error is : %@", error.localizedDescription);
-        }
-    }];
-    [downLoadTask resume];
 }
 @end

@@ -24,9 +24,7 @@
 
 @implementation KSYPresetCfgVC
 
-
-
-- (instancetype)initWithURL:(NSString *)url{
+- (instancetype)initWithURL:(NSURL *)url{
     self = [super init];
     _rtmpURL = url;
     _cfgView = [[KSYPresetCfgView alloc] init];
@@ -35,7 +33,6 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
     if (_cfgView == nil){
         _cfgView = [[KSYPresetCfgView alloc] init];
     }
@@ -46,17 +43,18 @@
     _cfgView.frame = self.view.frame;
     self.view = _cfgView;
     
-    //  TODO: !!!! 设置是否自动启动推流  Set whether to automatically start the flow
+    //  TODO: !!!! 设置是否自动启动推流
     UIButton * btn = nil;
     //btn = _cfgView.btn2;
     if (btn) {
         [self pressBtn:btn after:0.5];
     }
-    if (_rtmpURL && [_rtmpURL length] ){
-        _cfgView.hostUrlUI.text = _rtmpURL;
+    if (_rtmpURL ){
+        _cfgView.hostUrlUI.text = _rtmpURL.absoluteString;
     }
 }
 - (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
     [self layoutUI];
 }
 
@@ -121,5 +119,4 @@
         [self presentViewController:vc animated:true completion:nil];
     }
 }
-
 @end

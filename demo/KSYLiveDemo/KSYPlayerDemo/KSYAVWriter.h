@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
-#import <libksygpulive/KSYMediaInfo.h>
+#import <libksygpulive/KSYMoviePlayerController.h>
 
 /**
  * status类型
@@ -20,6 +20,20 @@ typedef NS_ENUM(NSInteger, KSYAVWriterStatus) {
     KSYAVWriter_Status_Preparing,
     ///正常状态
     KSYAVWriter_Status_OK,
+    ///停止中状态
+    KSYAVWriter_Status_Stoping,
+    // 暂停
+    KSYAVWriter_Status_Pause,
+};
+
+/**
+ * meta类型
+ */
+typedef NS_ENUM(NSInteger, KSYAVWriterMetaType) {
+    ///video meta
+    KSYAVWriter_MetaType_Video,
+    ///audio meta
+    KSYAVWriter_MetaType_Audio,
 };
 
 @interface KSYAVWriter : NSObject
@@ -39,10 +53,13 @@ typedef NS_ENUM(NSInteger, KSYAVWriterStatus) {
 -(void)setUrl:(NSURL *)url;
 
 //设置medidaInfo
--(void)setMediaInfo:(KSYMediaInfo *)mediaInfo;
+-(void)setMeta:(NSDictionary *)meta type:(KSYAVWriterMetaType)type;
 
 //开始写入
 -(void)startRecord;
+
+//开始写入（新版--暂停后重新开始录制时，不删除已录制的视频）
+-(void)startRecordDeleteRecordedVideo:(BOOL)isDelete;
 
 //接收视频sampleBuffer
 -(void)processVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer;
@@ -53,5 +70,12 @@ typedef NS_ENUM(NSInteger, KSYAVWriterStatus) {
 //停止写入
 -(void)stopRecord;
 
+// 暂停写入
+- (void)stopRecordPause:(BOOL)pause;
+
+// 将录制的视频存入相册
+- (void)saveVideoToPhotosAlbumWithResultBlock:(void(^)(NSError *error))resultBlock;
+
+- (void)cancelRecorde;
 
 @end

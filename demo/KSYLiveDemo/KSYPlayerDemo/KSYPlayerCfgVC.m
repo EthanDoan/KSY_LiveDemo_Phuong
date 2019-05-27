@@ -9,10 +9,11 @@
 #import "KSYUIView.h"
 #import "KSYPlayerCfgVC.h"
 #import "KSYPlayerVC.h"
+#import "KSYSimplePlayVC.h"
 
 #define ELEMENT_GAP  5
 
-@interface KSYPlayerCfgVC() <UITextViewDelegate>
+@interface KSYPlayerCfgVC() <UITextFieldDelegate>
 
 @end
 
@@ -53,10 +54,12 @@
     
     UILabel *demoLable;
     
-    //播放按钮/Play button
+    //播放按钮
     UIButton *btnPlay;
-    //退出按钮/Exit button
+    //退出按钮
     UIButton *btnQuit;
+    //极简播放按钮
+    UIButton *btnSamplestPlay;
 }
 
 - (instancetype)initWithURL:(NSURL *)url  fileList:(NSArray *)fileList{
@@ -73,7 +76,7 @@
 }
 
 - (void)setupUI {
-    //初始化各个控件/Initialize each control
+    //初始化各个控件
     ctrlView = [[KSYUIView alloc] initWithFrame:self.view.bounds];
     ctrlView.backgroundColor = [UIColor whiteColor];
     ctrlView.gap = ELEMENT_GAP;
@@ -87,48 +90,49 @@
         [selfWeak onSeg:sender];
     };
     
-    labelHostUrl = [ctrlView addLable:@"Play address"];//Play address 播放地址
+    labelHostUrl = [ctrlView addLable:@"播放地址"];
     textHostUrl = [ctrlView addTextField:[_url isFileURL] ? [_url path] : [_url absoluteString]];
     textHostUrl.returnKeyType = UIReturnKeyDone;
     textHostUrl.delegate = self;
     
-    //放置硬解码和swich开关/Place the hard decode and switch switch
-    labelHWCodec = [ctrlView addLable:@"Decoding method"];//解码方式
-    segHWCodec = [ctrlView addSegCtrlWithItems:@[@"Advanced hard solution", @"automatic",@"Hard solution",@"Soft solution"]];//高级硬解", @"自动",@"硬解",@"软解
+    //放置硬解码和swich开关
+    labelHWCodec = [ctrlView addLable:@"解码方式"];
+    segHWCodec = [ctrlView addSegCtrlWithItems:@[@"高级硬解", @"自动",@"硬解",@"软解"]];
     segHWCodec.selectedSegmentIndex = 1;
     
-    labelContentMode = [ctrlView addLable:@"Fill mode"];
-    segContentMode = [ctrlView addSegCtrlWithItems:@[@"no", @"Year on year", @"Cut", @"Full screen"]];
+    labelContentMode = [ctrlView addLable:@"填充模式"];
+    segContentMode = [ctrlView addSegCtrlWithItems:@[@"无", @"同比", @"裁剪", @"满屏"]];
     segContentMode.selectedSegmentIndex = 1;
     
-    labelAutoPlay = [ctrlView addLable:@"Autoplay"];
-    segAutoPlay = [ctrlView addSegCtrlWithItems:@[@"On",@"Off"]];
+    labelAutoPlay = [ctrlView addLable:@"自动播放"];
+    segAutoPlay = [ctrlView addSegCtrlWithItems:@[@"开启",@"关闭"]];
     
-    labelDeinterlace = [ctrlView addLable:@"Antiparallel pattern"];
-    segDeinterlace = [ctrlView addSegCtrlWithItems:@[@"On",@"Off"]];
+    labelDeinterlace = [ctrlView addLable:@"反交错模式"];
+    segDeinterlace = [ctrlView addSegCtrlWithItems:@[@"开启",@"关闭"]];
     
-    labelAudioInterrupt = [ctrlView addLable:@"Audio interrupt mode"];
-    segAudioInterrupt = [ctrlView addSegCtrlWithItems:@[@"On",@"Off"]];
+    labelAudioInterrupt = [ctrlView addLable:@"音频打断模式"];
+    segAudioInterrupt = [ctrlView addSegCtrlWithItems:@[@"开启",@"关闭"]];
     
-    labelLoop = [ctrlView addLable:@"Loop"];
-    segLoop = [ctrlView addSegCtrlWithItems:@[@"On",@"Off"]];
+    labelLoop = [ctrlView addLable:@"循环播放"];
+    segLoop = [ctrlView addSegCtrlWithItems:@[@"开启",@"关闭"]];
     segLoop.selectedSegmentIndex = 1;
     
-    labelMode = [ctrlView addLable:@"Play type"];
-    segMode = [ctrlView addSegCtrlWithItems:@[@"Live", @"On demand"]];
+    labelMode = [ctrlView addLable:@"播放类型"];
+    segMode = [ctrlView addSegCtrlWithItems:@[@"直播", @"点播"]];
     
-    sliderConnectTimeout = [ctrlView addSliderName:@"Connection timeout (seconds)" From:3 To:100 Init:10];
-    sliderReadTimeout = [ctrlView addSliderName:@"Read timeout (seconds)" From:3 To:100 Init:30];
-    sliderBufferTimeMax = [ctrlView addSliderName:@"bufferTimeMax(second)" From:0 To:60 Init:2];
+    sliderConnectTimeout = [ctrlView addSliderName:@"连接超时(秒)" From:3 To:100 Init:10];
+    sliderReadTimeout = [ctrlView addSliderName:@"读超时(秒)" From:3 To:100 Init:30];
+    sliderBufferTimeMax = [ctrlView addSliderName:@"bufferTimeMax(秒)" From:0 To:60 Init:2];
     sliderBufferSizeMax = [ctrlView addSliderName:@"bufferSizeMax(MB)" From:0 To:100 Init:15];
  
-    demoLable    = [ctrlView addLable:@"Select the appropriate button to start"];
+    demoLable    = [ctrlView addLable:@"选择相应按钮开始"];
     demoLable.textAlignment = NSTextAlignmentCenter;
     
     //添加一个播放按钮
-    btnPlay = [ctrlView addButton:@"Play"];
+    btnPlay = [ctrlView addButton:@"播放"];
     //添加一个退出按钮
-    btnQuit = [ctrlView addButton:@"Exit"];
+    btnQuit = [ctrlView addButton:@"退出"];
+    btnSamplestPlay = [ctrlView addButton:@"极简播放"];
     
     [self layoutUI];
     
@@ -136,12 +140,12 @@
 }
 
 - (void)layoutUI {
-    //设置各个控件的fram/Set the framing of each control
+    //设置各个控件的fram
     ctrlView.frame = self.view.frame;
     [ctrlView layoutUI];
     
     [ctrlView putLable:labelHostUrl andView:textHostUrl];
-    //放置硬解码和swich开关/Place the hard decode and switch switch
+    //放置硬解码和swich开关
     [ctrlView putLable:labelHWCodec andView:segHWCodec];
     [ctrlView putLable:labelContentMode andView:segContentMode];
     [ctrlView putLable:labelAutoPlay andView:segAutoPlay];
@@ -158,8 +162,8 @@
     CGFloat yPos = ctrlView.yPos > ctrlView.height ? ctrlView.yPos  - ctrlView.height : ctrlView.yPos;
     ctrlView.btnH = (ctrlView.height - yPos - ctrlView.gap*2) ;
     
-    //放置播放和退出按钮/Place the play and exit buttons
-    [ctrlView putRow2:btnPlay and:btnQuit];
+    //放置播放和退出按钮
+    [ctrlView putRow3:btnPlay and:btnSamplestPlay and:btnQuit];
 }
 
 - (void)onBtn:(UIButton *)btn{
@@ -167,6 +171,8 @@
     if(btn == btnPlay)
     {
         vc  = [[KSYPlayerVC alloc]initWithURLAndConfigure:[NSURL URLWithString:textHostUrl.text] fileList:_fileList config:self];
+    }else if(btn == btnSamplestPlay){
+        vc = [[KSYSimplePlayVC alloc]initWithURLAndConfigure:[NSURL URLWithString:textHostUrl.text] fileList:_fileList config:self];
     }
     else if(btn == btnQuit)
         [self dismissViewControllerAnimated:FALSE
@@ -200,7 +206,7 @@
 }
 
 - (MPMovieVideoDecoderMode)decodeMode {
-    //返回解码方式/Return to the decoding method
+    //返回解码方式
     switch(segHWCodec.selectedSegmentIndex) {
         case 0:
             return MPMovieVideoDecoderMode_DisplayLayer;
@@ -216,7 +222,7 @@
 }
 
 - (MPMovieScalingMode)contentMode {
-    //返回填充方式/Returns the fill mode
+    //返回填充方式
     switch(segContentMode.selectedSegmentIndex) {
         case 0:
             return MPMovieScalingModeNone;

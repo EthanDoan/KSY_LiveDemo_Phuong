@@ -12,7 +12,6 @@
 #import "KSYQosInfo.h"
 #import "KSYMoviePlayerDefines.h"
 #import "KSYReachability.h"
-#import "KSYMediaInfo.h"
 
 /**
  金山云播放内核提供了跨终端平台的播放器SDK，支持Android/iOS/Flash平台的视频播放需求。金山云播放内核集成有业界一流的高性能H.265/HEVC解码器，提供流畅、低功耗的播放体验。同时SDK提供和系统播放器一致的音视频播放、控制接口，极大地降低了开发门槛。
@@ -95,6 +94,18 @@ typedef void (^KSYPlyTextureBlock)(GLuint texId, int width, int height, double p
  @return 返回KSYMoviePlayerController 实例
  */
 - (instancetype)initWithContentURL:(NSURL *)url;
+
+/**
+ @abstract 初始化播放器并设置主播放地址和备用播放地址
+ @param url 视频主播放地址，使用HEVC流地址.
+ @param backURL 视频备用播放地址，使用H264流地址
+ @return 返回KSYMoviePlayerController对象，该对象的视频播放地址ContentURL已经初始化。此时播放器状态为MPMoviePlaybackStateStopped.
+ 
+ @discussion 如果设置了备用播放地址，则会在设备不支持硬解播放HEVC流时切换到备用播放地址进行播放
+ @warning 该方法由金山云引入，不是原生系统接口
+ @since Available in KSYMoviePlayerController 3.0.1 and later.
+ */
+- (instancetype)initWithContentURL:(NSURL *)url backupURL:(NSURL*)backupURL;
 
 /**
  @abstract 初始化播放器并设置播放地址
@@ -391,14 +402,6 @@ typedef void (^KSYPlyTextureBlock)(GLuint texId, int width, int height, double p
 @property (nonatomic, strong) KSYQosInfo *qosInfo;
 
 /**
- @abstract 视频流媒体信息
- @discussion 当前播放内容的媒体信息，prepare完成后调用
- @warning 该方法由金山云引入，不是原生系统接口
- @since Available in KSYMoviePlayerController 2.3.0 and later.
- */
-@property (nonatomic, strong) KSYMediaInfo *mediaInfo;
-
-/**
  @abstract 截图
  @warning 该方法由金山云引入，不是原生系统接口
  @return 当前时刻的视频UIImage 图像
@@ -550,14 +553,15 @@ typedef void (^KSYPlyTextureBlock)(GLuint texId, int width, int height, double p
 @property(nonatomic) BOOL  bInterruptOtherAudio;
 
 /**
- @abstract 立体声平衡模式，默认立体声输出
+ @abstract 立体声平衡模式，默认立体声输出，取值范围为[-1.0, 1.0]
  @discussion 针对单声道或双声道音频播放配置时有效，多声道音频播放配置无效
  @discussion 需要佩戴耳机以区分左右声道，手机外放无效果
  @discussion prepareToPlay前配置无效，应在播放过程中动态配置
+ @discussion 该值为0.0时，左右声道都有声音，< 0时，右声道声音小于左声道；> 0时，左声道声音小于右声道
  @warning 该方法由金山云引入，不是原生系统接口
  @since Available in KSYMoviePlayerController 2.0.3 and later
  */
-@property(nonatomic) MPMovieAudioPan audioPan;
+@property(nonatomic) float audioPan;
 
 /**
  @abstract 用于检测网络连通性的地址，默认使用地址为“www.baidu.com”
@@ -576,6 +580,15 @@ typedef void (^KSYPlyTextureBlock)(GLuint texId, int width, int height, double p
  @since Available in KSYMoviePlayerController 2.1.1 and later
  */
 @property (nonatomic, readonly) KSYNetworkStatus networkStatus;
+
+/**
+ @abstract 设置播放速度，取值范围(0.5~2.0)，默认1.0
+ @warning 该属性由金山云引入，不是原生系统接口
+ @since Available in KSYMoviePlayerController 2.4.1 and later.
+ */
+@property (nonatomic) float playbackSpeed;
+
+
 
 /**
  @abstract timeout指定拉流超时时间,单位是秒
@@ -621,6 +634,19 @@ typedef void (^KSYPlyTextureBlock)(GLuint texId, int width, int height, double p
  @since Available in KSYMoviePlayerController 1.3.1 and later.
  */
 - (NSDictionary *)getMetadata;
+
+/**
+ @abstract 获取播放Meta
+ @discussion 收到MPMediaPlaybackIsPreparedToPlayDidChangeNotification通知后才能获取到数据
+ @discussion 暂时支持的查询包括
+ 
+ * 当metaType为MPMovieMetaType_Media时，所得到的结果与getMetadata方法相同
+ * 当metaType为其他类型时，得到的当前播放的视频/音频/字幕流的meta信息
+ 
+ @warning 该方法由金山云引入，不是原生系统接口
+ @since Available in KSYMoviePlayerController 2.5.2 and later.
+ */
+- (NSDictionary *)getMetadata:(MPMovieMetaType)metaType;
 
 /**
  @abstract 当前播放器是否在播放
@@ -737,10 +763,29 @@ typedef void (^KSYPlyTextureBlock)(GLuint texId, int width, int height, double p
 
 /**
  @abstract 发送http请求时需要header带上的字段
+ @param header 自定义http header字段
  @discussion 在调用prepareToPlay方法前调用生效
  @warning 该方法由金山云引入，不是原生系统接口
  @since Available in KSYMoviePlayerController 2.0.3 and later.
  */
 -(void)setHttpHeaders:(NSDictionary *)headers;
+
+/**
+ @abstract 设置开启/关闭指定的媒体轨道
+ @param trackIndex - 轨道的stream index
+ @param selected - 开启/关闭指定媒体轨道
+ @warning 该方法由金山云引入，不是原生系统接口
+ @since Available in KSYMoviePlayerController 2.5.2 and later.
+ */
+- (void) setTrackSelected:(NSInteger)trackIndex selected:(BOOL)selected;
+
+/**
+ @abstract 设置本地字幕文件的地址
+ @param subtitleFilePath 本地字幕文件地址
+ @discussion 在播放过程中调用
+ @warning 该方法由金山云引入，不是原生系统接口
+ @since Available in KSYMoviePlayerController 2.5.2 and later.
+ */
+- (void)setExtSubtitleFilePath:(NSString *)subtitleFilePath;
 
 @end

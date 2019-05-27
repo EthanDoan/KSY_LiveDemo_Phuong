@@ -80,6 +80,7 @@
     _interruptCallback       = nil;
     _gpuOutputPixelFormat = kCVPixelFormatType_32BGRA;
     _capturePixelFormat   = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+    _audioDataType = KSYAudioData_CMSampleBuffer;
     
     _autoRetryCnt    = 0;
     _maxAutoRetry    = 0;
@@ -90,6 +91,8 @@
     _cameraLayer  = 2;
     _logoPicLayer = 3;
     _logoTxtLayer = 4;
+    _aeLayer = 6;
+
     _micTrack = 0;
     _bgmTrack = 1;
 
@@ -106,6 +109,14 @@
     _previewOrientation =
     _videoOrientation   =
     _streamOrientation  = UIInterfaceOrientationPortrait;
+    // 设置 AudioSession的属性为直播需要的默认值, 具体如下:
+    // bInterruptOtherAudio : NO  不打断其他播放器
+    // bDefaultToSpeaker : YES    背景音乐从外放播放
+    // bAllowBluetooth : YES      启用蓝牙
+    // AVAudioSessionCategory : AVAudioSessionCategoryPlayAndRecord  允许录音
+    // 设置不打断其他播放器时，需要放在_aCapDev初始化前设置，否则没效果
+    [[AVAudioSession sharedInstance] setDefaultCfg];
+    [AVAudioSession sharedInstance].bInterruptOtherAudio = bInter;
     // 创建背景音乐播放模块
     _bgmPlayer = [[KSYBgmPlayer   alloc] init];
     // 音频采集模块
@@ -113,6 +124,7 @@
     // 各种图片
     _logoPic = nil;
     _textPic = nil;
+    _aePic = nil;
     _textLabel = [[UILabel alloc] initWithFrame:CGRectMake(0,0, 360, 640)];
     _textLabel.textColor = [UIColor whiteColor];
     _textLabel.font = [UIFont fontWithName:@"Courier" size:20.0];
@@ -125,7 +137,7 @@
     // 创建 推流模块
     _streamerBase = [[KSYStreamerBase alloc] initWithDefaultCfg];
     // 创建 预览模块, 并放到视图底部
-    _preview = [[GPUImageView alloc] init];
+    _preview = [[KSYGPUView alloc] init];
     _preview.fillMode = kGPUImageFillModePreserveAspectRatioAndFill;
     
     ///// 3. 数据处理和通路 ///////////
@@ -148,13 +160,6 @@
     
     // 组装音频通道
     [self setupAudioPath];
-    // 设置 AudioSession的属性为直播需要的默认值, 具体如下:
-    // bInterruptOtherAudio : NO  不打断其他播放器
-    // bDefaultToSpeaker : YES    背景音乐从外放播放
-    // bAllowBluetooth : YES      启用蓝牙
-    // AVAudioSessionCategory : AVAudioSessionCategoryPlayAndRecord  允许录音
-    [[AVAudioSession sharedInstance] setDefaultCfg];
-    [AVAudioSession sharedInstance].bInterruptOtherAudio = bInter;
     
     //消息通道
     _msgStreamer = [[KSYMessage alloc] init];
@@ -165,9 +170,7 @@
         [selfWeak onStreamState:state];
     };
     _streamerBase.videoFPSChange = ^(int newVideoFPS){
-        selfWeak.videoFPS = MAX(1, MIN(newVideoFPS, 30));
-        selfWeak.vCapDev.frameRate = selfWeak.videoFPS;
-        selfWeak.streamerBase.videoFPS = selfWeak.videoFPS;
+        [selfWeak changeFPS:newVideoFPS];
     };
     //设置profile初始值
     self.streamerProfile = KSYStreamerProfile_540p_3;
@@ -185,6 +188,7 @@
            selector:@selector(onNetEvent)
                name:KSYNetStateEventNotification
              object:nil];
+
     return self;
 }
 - (instancetype)init {
@@ -215,6 +219,7 @@
     [_filter      removeAllTargets];
     [_logoPic     removeAllTargets];
     [_textPic     removeAllTargets];
+    [_aePic       removeAllTargets];
     [_vPreviewMixer  removeAllTargets];
     [_vStreamMixer   removeAllTargets];
 }
@@ -246,6 +251,9 @@
     [self addPic:src       ToMixerAt:_cameraLayer];
     [self addPic:_logoPic  ToMixerAt:_logoPicLayer];
     [self addPic:_textPic  ToMixerAt:_logoTxtLayer];
+    self.aePic = _aePic;
+    [self setPreviewMirrored: _previewMirrored];
+    [self setStreamerMirrored: _streamerMirrored];
 }
 
 - (void) setupVMixer {
@@ -273,14 +281,16 @@
 }
 
 // 添加图层到 vMixer 中
-- (void) addPic:(GPUImageOutput*)pic ToMixerAt: (NSInteger)idx{
+- (void) addPic:(KSYGPUPicture*)pic ToMixerAt: (NSInteger)idx{
+    KSYGPUPicMixer * vMixer[2] = {_vPreviewMixer, _vStreamMixer};
     if (pic == nil){
+        for (int i = 0; i<2; ++i) {
+            [vMixer[i]  clearPicOfLayer:idx];
+        }
         return;
     }
     [pic removeAllTargets];
-    KSYGPUPicMixer * vMixer[2] = {_vPreviewMixer, _vStreamMixer};
     for (int i = 0; i<2; ++i) {
-        [vMixer[i]  clearPicOfLayer:idx];
         [pic addTarget:vMixer[i] atTextureLocation:idx];
     }
 }
@@ -331,12 +341,25 @@
 - (void) setupAudioPath {
     weakObj(self);
     //1. 音频采集, 语音数据送入混音器
-    _aCapDev.audioProcessingCallback = ^(CMSampleBufferRef buf){
-        if ( selfWeak.audioProcessingCallback ){
-            selfWeak.audioProcessingCallback(buf);
-        }
-        [selfWeak mixAudio:buf to:selfWeak.micTrack];
-    };
+    if (_audioDataType == KSYAudioData_CMSampleBuffer) {
+        _aCapDev.audioProcessingCallback = ^(CMSampleBufferRef buf){
+            if ( selfWeak.audioProcessingCallback ){
+                selfWeak.audioProcessingCallback(buf);
+            }
+            [selfWeak mixAudio:buf to:selfWeak.micTrack];
+        };
+    }
+    else {
+        _aCapDev.pcmProcessingCallback = ^(uint8_t **pData, int len, const AudioStreamBasicDescription *fmt, CMTime timeInfo) {
+            if ( selfWeak.pcmProcessingCallback ){
+                selfWeak.pcmProcessingCallback(pData, len, fmt, timeInfo);
+            }
+            if (![selfWeak.streamerBase isStreaming]){
+                return;
+            }
+            [selfWeak.aMixer processAudioData:pData nbSample:len withFormat:fmt timeinfo:timeInfo of:selfWeak.micTrack];
+        };
+    }
     //2. 背景音乐播放,音乐数据送入混音器
     _bgmPlayer.audioDataBlock = ^ BOOL(uint8_t** pData, int len, const AudioStreamBasicDescription* fmt, CMTime pts){
         if ([selfWeak.streamerBase isStreaming]) {
@@ -349,12 +372,25 @@
         return YES;
     };
     // 混音结果送入streamer
-    _aMixer.audioProcessingCallback = ^(CMSampleBufferRef buf){
-        if (![selfWeak.streamerBase isStreaming]){
-            return;
-        }
-        [selfWeak.streamerBase processAudioSampleBuffer:buf];
-    };
+    if (_audioDataType == KSYAudioData_CMSampleBuffer) {
+        _aMixer.audioProcessingCallback = ^(CMSampleBufferRef buf){
+            if (![selfWeak.streamerBase isStreaming]){
+                return;
+            }
+            [selfWeak.streamerBase processAudioSampleBuffer:buf];
+        };
+    }
+    else {
+        _aMixer.pcmProcessingCallback = ^(uint8_t **pData, int nbSample, CMTime pts) {
+            if (![selfWeak.streamerBase isStreaming]){
+                return;
+            }
+            [selfWeak.streamerBase processAudioData:pData
+                                           nbSample:nbSample
+                                         withFormat:selfWeak.aMixer.outFmtDes
+                                           timeinfo:&pts];
+        };
+    }
     // mixer 的主通道为麦克风,时间戳以main通道为准
     _aMixer.mainTrack = _micTrack;
     [_aMixer setTrack:_micTrack enable:YES];
@@ -649,6 +685,14 @@
     _maxAutoRetry = MAX(0, maxAutoRetry);
     _autoRetryCnt = _maxAutoRetry;
 }
+@synthesize audioDataType = _audioDataType;
+- (void) setAudioDataType:(KSYAudioDataType)audioDataType {
+    _audioDataType = audioDataType;
+    [self setupAudioPath];
+}
+- (KSYAudioDataType) audioDataType {
+    return _audioDataType;
+}
 
 #pragma mark - Dimension
 /**
@@ -706,6 +750,7 @@
     inSz = [self getDimension:inSz byOriention:_vCapDev.outputImageOrientation];
     CGSize cropSz = [self calcCropSize:inSz to:_previewDimension];
     _capToGpu.cropRegion = [self calcCropRect:inSz to:cropSz];
+    _capToGpu.outputRotation = kGPUImageNoRotation;
     [_capToGpu forceProcessingAtSize:_previewDimension];
 }
 - (void) updateStrDimension:(UIInterfaceOrientation) orie {
@@ -737,12 +782,16 @@
     _streamDimension.height = MAX( 90, MIN(_streamDimension.height, 720));
 }
 @synthesize videoFPS = _videoFPS;
+- (void)changeFPS:(int)fps {
+    _videoFPS = MAX(1, MIN(fps, 30));
+    _vCapDev.frameRate = _videoFPS;
+    _streamerBase.videoFPS = _videoFPS;
+}
+
 - (void) setVideoFPS: (int) fps {
     if(_captureState  ==  KSYCaptureStateIdle)
     {
-        _videoFPS = MAX(1, MIN(fps, 30));
-        _vCapDev.frameRate = _videoFPS;
-        _streamerBase.videoFPS = _videoFPS;
+        [self changeFPS:fps];
     }
 }
 
@@ -865,11 +914,54 @@
     return image;
 }
 #pragma mark - pictures & logo
+@synthesize textPic = _textPic;
+-(void) setTextPic:(KSYGPUPicture *)textPic{
+    _textPic = textPic;
+    [self addPic:_textPic ToMixerAt:_logoTxtLayer];
+}
 @synthesize logoPic = _logoPic;
--(void) setLogoPic:(GPUImagePicture *)pic{
+-(void) setLogoPic:(KSYGPUPicture *)pic{
     _logoPic = pic;
     [self addPic:_logoPic ToMixerAt:_logoPicLayer];
 }
+static GPUImageRotationMode KSYImage2GPURotate[] = {
+    kGPUImageNoRotation,// UIImageOrientationUp,            // default orientation
+    kGPUImageRotate180,//UIImageOrientationDown,          // 180 deg rotation
+    kGPUImageRotateLeft, //UIImageOrientationLeft,          // 90 deg CCW
+    kGPUImageRotateRight,//UIImageOrientationRight,         // 90 deg CW
+    kGPUImageFlipHorizonal,//UIImageOrientationUpMirrored,    // as above but image mirrored along other axis. horizontal flip
+    kGPUImageFlipHorizonal,//UIImageOrientationDownMirrored,  // horizontal flip
+    kGPUImageFlipVertical,//UIImageOrientationLeftMirrored,  // vertical flip
+    kGPUImageRotateRightFlipVertical//UIImageOrientationRightMirrored, // vertical flip
+};
+
+- (void) setOrientaion:(UIImageOrientation) orien ofLayer:(NSInteger)idx {
+    [_vPreviewMixer setPicRotation:KSYImage2GPURotate[orien]
+                           ofLayer:idx];
+    [_vStreamMixer setPicRotation:KSYImage2GPURotate[orien]
+                          ofLayer:idx];
+}
+- (void) setLogoOrientaion:(UIImageOrientation) orien{
+    [self setOrientaion:orien ofLayer:_logoPicLayer];
+}
+@synthesize aePic = _aePic;
+-(void) setAePic:(GPUImageUIElement *)aePic{
+    _aePic = aePic;
+    [self.vStreamMixer  clearPicOfLayer:_aeLayer];
+    if (_aePic == nil){
+        return;
+    }
+    [_aePic removeAllTargets];
+    [_aePic addTarget:self.vStreamMixer atTextureLocation:_aeLayer];
+}
+
+- (void) setRect:(CGRect) rect ofLayer:(NSInteger)idx {
+    [_vPreviewMixer setPicRect:rect
+                       ofLayer:idx];
+    [_vStreamMixer setPicRect:rect
+                      ofLayer:idx];
+}
+
 // 水印logo的图片的位置和大小
 @synthesize logoRect = _logoRect;
 - (CGRect) logoRect {
@@ -877,10 +969,7 @@
 }
 - (void) setLogoRect:(CGRect)logoRect{
     _logoRect = logoRect;
-    [_vPreviewMixer setPicRect:logoRect
-                       ofLayer:_logoPicLayer];
-    [_vStreamMixer setPicRect:logoRect
-                      ofLayer:_logoPicLayer];
+    [self setRect:logoRect ofLayer:_logoPicLayer];
 }
 // 水印logo的图片的透明度
 @synthesize logoAlpha = _logoAlpha;
@@ -898,10 +987,7 @@
 }
 - (void) setTextRect:(CGRect)rect{
     _textRect = rect;
-    [_vPreviewMixer setPicRect:rect
-                       ofLayer:_logoTxtLayer];
-    [_vStreamMixer setPicRect:rect
-                      ofLayer:_logoTxtLayer];
+    [self setRect:rect ofLayer:_logoTxtLayer];
 }
 /**
  @abstract   刷新水印文字的内容
@@ -921,14 +1007,20 @@
     [self addPic:_textPic ToMixerAt:_logoTxtLayer];
     [_textPic processImage];
 }
+
 @synthesize capturePixelFormat = _capturePixelFormat;
 - (void)setCapturePixelFormat: (OSType) fmt {
     if (_vCapDev.isRunning){
         return;
     }
-    if(fmt != kCVPixelFormatType_32BGRA ){
+
+    if(fmt != kCVPixelFormatType_32BGRA  &&
+        fmt != kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange &&
+        fmt != kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)
+    {
         fmt = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
     }
+
     _capturePixelFormat = fmt;
     _vCapDev.outputPixelFmt = fmt;
     _capToGpu =[[KSYGPUPicInput alloc] initWithFmt:fmt];
@@ -941,12 +1033,14 @@
     if ([_streamerBase isStreaming]){
         return;
     }
-    if( fmt !=  kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
+    if( fmt !=  kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange &&
+        fmt !=  kCVPixelFormatType_420YpCbCr8BiPlanarFullRange &&
+        fmt !=  kCVPixelFormatType_420YpCbCr8PlanarFullRange &&
         fmt !=  kCVPixelFormatType_420YpCbCr8Planar ){
         fmt = kCVPixelFormatType_32BGRA;
     }
     _gpuOutputPixelFormat = fmt;
-    _gpuToStr =[[KSYGPUPicOutput alloc] initWithOutFmt:_gpuOutputPixelFormat];
+    _gpuToStr =[[KSYGPUPicOutput alloc] initWithOutFmt:fmt];
     [self setupVideoPath];
     [self updateStrDimension:self.videoOrientation];
 }
@@ -955,15 +1049,11 @@
 
 - (void) setPreviewMirrored:(BOOL)bMirrored {
     if(_vPreviewMixer){
-        GPUImageRotationMode ro = kGPUImageNoRotation;
-        if (bMirrored) {
-            if (FLOAT_EQ(_previewRotateAng, M_PI_2*1) ||
-                FLOAT_EQ(_previewRotateAng, M_PI_2*3)) {
-                ro = kGPUImageFlipVertical;
-            }
-            else {
-                ro = kGPUImageFlipHorizonal;
-            }
+        GPUImageRotationMode ro = bMirrored ? kGPUImageFlipHorizonal: kGPUImageNoRotation;
+        int ang = _previewRotateAng / M_PI_2;
+        BOOL capAng = GPUImageRotationSwapsWidthAndHeight(_capToGpu.outputRotation);
+        if ( !capAng && (ang == 1 || ang == 3)) {
+            ro = bMirrored ? kGPUImageFlipVertical : kGPUImageNoRotation;
         }
         [_vPreviewMixer setPicRotation:ro ofLayer:_cameraLayer];
     }
@@ -973,17 +1063,7 @@
 
 - (void) setStreamerMirrored:(BOOL)bMirrored {
     if (_vStreamMixer){
-        GPUImageRotationMode ro = kGPUImageNoRotation;
-        if( bMirrored ) {
-            GPUImageRotationMode inRo = [_gpuToStr getInputRotation];
-            if (inRo == kGPUImageRotateLeft ||
-                inRo == kGPUImageRotateRight ) {
-                ro = kGPUImageFlipVertical;
-            }
-            else {
-                ro = kGPUImageFlipHorizonal;
-            }
-        }
+        GPUImageRotationMode ro = bMirrored ? kGPUImageFlipHorizonal: kGPUImageNoRotation;
         [_vStreamMixer setPicRotation:ro ofLayer:_cameraLayer];
     }
     _streamerMirrored = bMirrored;
@@ -1031,23 +1111,19 @@ M_PI_2*1,M_PI_2*3, M_PI_2*2, M_PI_2*0,
     });
 }
 
--(void)internalRotatePreviewTo: (UIInterfaceOrientation) orie
-{
+-(void)internalRotatePreviewTo: (UIInterfaceOrientation) orie {
     _previewOrientation = orie;
     UIView* view = [_preview superview];
-    if (UIInterfaceOrientationPortrait == orie || view == nil) {
-        for (UIView<GPUImageInput> *v in _vPreviewMixer.targets) {
-            v.transform = CGAffineTransformIdentity;
-        }
+    if (_videoOrientation == orie || view == nil) {
         _previewRotateAng = 0;
     }
     else {
         int capOri = UIOrienToIdx(_vCapDev.outputImageOrientation);
-        int appOri = UIOrienToIdx(UIInterfaceOrientationPortrait);
+        int appOri = UIOrienToIdx(orie);
         _previewRotateAng = KSYRotateAngles[ capOri ][ appOri ];
-        for (UIView<GPUImageInput> *v in _vPreviewMixer.targets) {
-            v.transform = CGAffineTransformMakeRotation(_previewRotateAng);
-        }
+    }
+    for (UIView<GPUImageInput> *v in _vPreviewMixer.targets) {
+        v.transform = CGAffineTransformMakeRotation(_previewRotateAng);
     }
     _preview.frame = view.bounds;
     [self setPreviewMirrored: _previewMirrored];
@@ -1070,25 +1146,16 @@ kGPUImageRotateRight, kGPUImageRotateLeft,  kGPUImageRotate180,  kGPUImageNoRota
     if (_gpuToStr.bAutoRepeat) {
         return;
     }
-    if (_videoOrientation == orie || _vCapDev.isRunning == NO) {
-        int capOri = UIOrienToIdx(_videoOrientation);
-        int appOri = UIOrienToIdx(orie);
-        GPUImageRotationMode mode = KSYRotateMode[capOri][appOri];
-        _capToGpu.outputRotation = mode;
-        [_preview setInputRotation:mode atIndex:0];
-    }
-    else {
-        int capOri = UIOrienToIdx(_videoOrientation);
-        int appOri = UIOrienToIdx(orie);
-        GPUImageRotationMode mode = KSYRotateMode[capOri][appOri];
-        GPUImageRotationMode oppositeMode = KSYRotateMode[appOri][capOri];
-        _capToGpu.outputRotation = mode;
-        [_preview setInputRotation:oppositeMode atIndex:0];
-    }
-    
+    int capOri = UIOrienToIdx(_videoOrientation);
+    int appOri = UIOrienToIdx(orie);
+    GPUImageRotationMode oppositeMode = KSYRotateMode[appOri][capOri];
+    [_preview setInputRotation:oppositeMode atIndex:0];
     [self updatePreDimension];
     [self updateStrDimension:orie];
+    GPUImageRotationMode mode = KSYRotateMode[capOri][appOri];
+    _capToGpu.outputRotation = mode;
     [self setStreamerMirrored: _streamerMirrored];
+    [self setPreviewMirrored: _previewMirrored];
 }
 
 /**
@@ -1098,10 +1165,10 @@ kGPUImageRotateRight, kGPUImageRotateLeft,  kGPUImageRotate180,  kGPUImageNoRota
     AVCaptureDevice *dev = _vCapDev.inputCamera;
     NSError *error;
     
-    if ([dev isExposurePointOfInterestSupported] && [dev isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
+    if ([dev isExposurePointOfInterestSupported] && [dev isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]) {
         if ([dev lockForConfiguration:&error]) {
             [dev setExposurePointOfInterest:point];  // 曝光点
-            [dev setExposureMode:AVCaptureExposureModeAutoExpose];
+            [dev setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
             [dev unlockForConfiguration];
             return YES;
         }
@@ -1159,7 +1226,7 @@ kGPUImageRotateRight, kGPUImageRotateLeft,  kGPUImageRotate180,  kGPUImageNoRota
     _streamerBase.bwEstimateMode = KSYBWEstMode_Default;
     _streamerBase.videoMinFPS = 10;
     _streamerBase.videoMaxFPS = 25;
-    
+    _streamerBase.videoEncodePerf = KSYVideoEncodePer_HighPerformance;
     switch (profile) {
         case KSYStreamerProfile_360p_auto:
             _capPreset = AVCaptureSessionPreset640x480;
@@ -1167,7 +1234,7 @@ kGPUImageRotateRight, kGPUImageRotateLeft,  kGPUImageRotate180,  kGPUImageNoRota
             _streamDimension = CGSizeMake(640, 360);
             self.videoFPS = 15;
             _streamerBase.videoMaxBitrate = 512;
-            _streamerBase.audiokBPS = 48;
+            _streamerBase.audiokBPS = 64;
             break;
         case KSYStreamerProfile_360p_1:
             _capPreset = AVCaptureSessionPreset640x480;
@@ -1175,7 +1242,7 @@ kGPUImageRotateRight, kGPUImageRotateLeft,  kGPUImageRotate180,  kGPUImageNoRota
             _streamDimension = CGSizeMake(640, 360);
             self.videoFPS = 15;
             _streamerBase.videoMaxBitrate = 512;
-            _streamerBase.audiokBPS = 48;
+            _streamerBase.audiokBPS = 64;
             break;
         case KSYStreamerProfile_360p_2:
             _capPreset = AVCaptureSessionPresetiFrame960x540;
@@ -1183,7 +1250,7 @@ kGPUImageRotateRight, kGPUImageRotateLeft,  kGPUImageRotate180,  kGPUImageNoRota
             _streamDimension = CGSizeMake(640, 360);
             self.videoFPS = 15;
             _streamerBase.videoMaxBitrate = 512;
-            _streamerBase.audiokBPS = 48;
+            _streamerBase.audiokBPS = 64;
             break;
         case KSYStreamerProfile_360p_3:
             _capPreset = AVCaptureSessionPreset1280x720;
@@ -1191,7 +1258,7 @@ kGPUImageRotateRight, kGPUImageRotateLeft,  kGPUImageRotate180,  kGPUImageNoRota
             _streamDimension = CGSizeMake(640, 360);
             self.videoFPS = 20;
             _streamerBase.videoMaxBitrate = 768;
-            _streamerBase.audiokBPS = 48;
+            _streamerBase.audiokBPS = 64;
             break;
         case KSYStreamerProfile_540p_auto:
             _capPreset = AVCaptureSessionPresetiFrame960x540;
@@ -1299,5 +1366,33 @@ kGPUImageRotateRight, kGPUImageRotateLeft,  kGPUImageRotate180,  kGPUImageNoRota
         };
     }
 }
+
+- (BOOL)setStabilizationMode:(AVCaptureVideoStabilizationMode)stabilizationMode{
+    _stabilizationMode = stabilizationMode;
+    __block BOOL supported = NO;
+    
+    __weak typeof(self) weakSelf = self;
+    NSArray<AVCaptureOutput *> *outputs = _vCapDev.captureSession.outputs;
+    [outputs enumerateObjectsUsingBlock:^(AVCaptureOutput *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([obj isKindOfClass:[AVCaptureVideoDataOutput class]]) {
+            if ([weakSelf.vCapDev.inputCamera.activeFormat isVideoStabilizationModeSupported:stabilizationMode]){
+                AVCaptureConnection *connection = [obj connectionWithMediaType:AVMediaTypeVideo];
+                
+                if ([connection isVideoStabilizationSupported]) {
+                    if ([[[UIDevice currentDevice] systemVersion] compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending) {
+                        [connection setPreferredVideoStabilizationMode:stabilizationMode];
+                    }else{
+                        [connection setEnablesVideoStabilizationWhenAvailable:YES];
+                    }
+                    supported = YES;
+                }
+            }
+        }
+    }];
+    
+    return supported;
+}
+
+
 
 @end

@@ -80,6 +80,8 @@
 		
 		<option value="//api/name/maxKeyInterval">maxKeyInterval</option>
 		
+		<option value="//api/name/mp4FastStart">mp4FastStart</option>
+		
 		<option value="//api/name/recScene">recScene</option>
 		
 		<option value="//api/name/shouldEnableKSYDropModule">shouldEnableKSYDropModule</option>
@@ -139,6 +141,8 @@
 		<option value="//api/name/startWritingWith:">- startWritingWith:</option>
 		
 		<option value="//api/name/stopWriting">- stopWriting</option>
+		
+		<option value="//api/name/stopWriting:">- stopWriting:</option>
 		
 	</optgroup>
 	
@@ -361,7 +365,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 			
 			<div class="method-subsection discussion-section">
 				<h4 class="method-subtitle">Discussion</h4>
-				<p>video codec used for encode</p>
+				<p>video codec used for encode</p><p>修改此选项会导致videoEncodePerf值变化</p><p>如果需要定制编码档次, 请在修改videoCodec之后再测设置</p>
 			</div>
 			
 
@@ -372,7 +376,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 				<h4 class="method-subtitle">See Also</h4>
 				<ul>
 					
-					<li><code><p><a href="../Constants/KSYVideoCodec.html">KSYVideoCodec</a></p></code></li>
+					<li><code><p><a href="../Constants/KSYVideoCodec.html">KSYVideoCodec</a>,<a href="#//api/name/videoEncodePerf">@property videoEncodePerf</a></p></code></li>
 					
 				</ul>
 			</div>
@@ -576,52 +580,6 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 		</div>
 	</div>
 </div><div class="section-method">
-	<a name="//api/name/videoCrf" title="videoCrf"></a>
-	<h3 class="method-title"><code><a href="#//api/name/videoCrf">&nbsp;&nbsp;videoCrf</a></code>
-</h3>
-
-	<div class="method-info">
-		<div class="pointy-thing"></div>
-
-		<div class="method-info-container">
-			
-			
-			<div class="method-subsection brief-description">
-				<p>质量等级（默认:20）</p>
-			</div>
-			
-		    
-
-			<div class="method-subsection method-declaration"><code>@property (nonatomic, assign) int videoCrf</code></div>
-
-		    
-			
-
-			
-
-			
-
-			
-			<div class="method-subsection discussion-section">
-				<h4 class="method-subtitle">Discussion</h4>
-				<p>视频恒定质量等级，范围0～51，值越小，质量越好</p>
-			</div>
-			
-
-			
-
-			
-
-			
-			<div class="method-subsection declared-in-section">
-				<h4 class="method-subtitle">Declared In</h4>
-				<p><code class="declared-in-ref">KSYClipWriter.h</code></p>
-			</div>
-			
-			
-		</div>
-	</div>
-</div><div class="section-method">
 	<a name="//api/name/maxKeyInterval" title="maxKeyInterval"></a>
 	<h3 class="method-title"><code><a href="#//api/name/maxKeyInterval">&nbsp;&nbsp;maxKeyInterval</a></code>
 </h3>
@@ -771,7 +729,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 			
 			
 			<div class="method-subsection brief-description">
-				<p>编码的目标场景 (默认为KSYRecScene_ConstantBitRate)</p>
+				<p>本次录制的目标场景 (默认为KSYRecScene_ConstantBitRate)</p>
 			</div>
 			
 		    
@@ -788,7 +746,53 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 			
 			<div class="method-subsection discussion-section">
 				<h4 class="method-subtitle">Discussion</h4>
-				<p>开始编码前设置有效</p>
+				<p>用于指定录制时, 视频编码器码率控制的优先目标</p><p>恒定码率: 最后视频文件的码率更平稳,但复杂场景质量可能差一些</p><p>恒定质量: 最后视频文件的质量更平稳写, 但码率波动要大一些</p><p>开始录制前设置有效,</p>
+			</div>
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYClipWriter.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/videoCrf" title="videoCrf"></a>
+	<h3 class="method-title"><code><a href="#//api/name/videoCrf">&nbsp;&nbsp;videoCrf</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>质量等级（默认:20）</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>@property (nonatomic, assign) int videoCrf</code></div>
+
+		    
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection discussion-section">
+				<h4 class="method-subtitle">Discussion</h4>
+				<p>视频恒定质量等级，范围0～51，值越小，质量越好</p><p>当 <a href="#//api/name/recScene">recScene</a> 为 KSYRecScene_ConstantQuality, 且选择软编码器时有效</p>
 			</div>
 			
 
@@ -817,7 +821,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 			
 			
 			<div class="method-subsection brief-description">
-				<p>视频编码性能档次 ( 默认为 KSYVideoEncodePer_LowPower)</p>
+				<p>视频编码性能档次</p>
 			</div>
 			
 		    
@@ -834,7 +838,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 			
 			<div class="method-subsection discussion-section">
 				<h4 class="method-subtitle">Discussion</h4>
-				<p>视频质量和设备资源之间的权衡,开始写入前设置有效</p>
+				<p>视频质量和设备资源之间的权衡,开始推流前, videoCodec设置之后,修改有效</p><p>选择软编码的默认为KSYVideoEncodePer_LowPower</p><p>选择Auto或硬编码的默认为KSYVideoEncodePer_HighPerformance</p>
 			</div>
 			
 
@@ -923,6 +927,52 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 
 			
 
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYClipWriter.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/mp4FastStart" title="mp4FastStart"></a>
+	<h3 class="method-title"><code><a href="#//api/name/mp4FastStart">&nbsp;&nbsp;mp4FastStart</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>mp4文件允许快速启动 (默认YES)</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>@property (nonatomic, assign) BOOL mp4FastStart</code></div>
+
+		    
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection discussion-section">
+				<h4 class="method-subtitle">Discussion</h4>
+				<p>mp4格式的文件中将moov等index信息放到文件开头</p><div class="warning"><p><strong>Warning:</strong> 启用此开关会在结束是对文件进行处理, 如果要长时间录制,请关闭本选项</p></div>
+			</div>
 			
 
 			
@@ -1355,7 +1405,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 
 <ul>
 <li>_<a href="#//api/name/videoFPS">videoFPS</a>         = 15;</li>
-<li><em><a href="#//api/name/videoCodec">videoCodec</a>       = <a href="../Constants/KSYVideoCodec.html">KSYVideoCodec</a></em>X264;</li>
+<li><em><a href="#//api/name/videoCodec">videoCodec</a>       = <a href="../Constants/KSYVideoCodec.html">KSYVideoCodec</a></em>AUTO;</li>
 <li>_<a href="#//api/name/audiokBPS">audiokBPS</a>        = 32;</li>
 <li>_<a href="#//api/name/videoInitBitrate">videoInitBitrate</a> = 500;</li>
 </ul>
@@ -1451,6 +1501,64 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 			<div class="method-subsection method-declaration"><code>- (void)stopWriting</code></div>
 
 		    
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection discussion-section">
+				<h4 class="method-subtitle">Discussion</h4>
+				<p>停止文件写入</p>
+			</div>
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYClipWriter.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/stopWriting:" title="stopWriting:"></a>
+	<h3 class="method-title"><code><a href="#//api/name/stopWriting:">&ndash;&nbsp;stopWriting:</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>停止写入 （step3）</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>- (void)stopWriting:(void ( ^ ) ( ))<em>complete</em></code></div>
+
+		    
+			
+			<div class="method-subsection arguments-section parameters">
+				<h4 class="method-subtitle parameter-title">Parameters</h4>
+				<table class="argument-def parameter-def">
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>complete</code></th>
+						<td><p>完成回调</p></td>
+					</tr>
+				
+				</table>
+			</div>
 			
 
 			
@@ -2065,7 +2173,7 @@ eg: /var/xxxxx/xxx.mp4  /var/xxxxx/xxx.flv</p>
 				<footer>
 					<div class="footer-copyright">
 						
-						<p class="copyright">Copyright &copy; 2017 Kingsoft. All rights reserved. Updated: 2017-05-31</p>
+						<p class="copyright">Copyright &copy; 2018 Kingsoft. All rights reserved. </p>
 						
 						
 						<p class="generator">Generated by <a href="http://appledoc.gentlebytes.com">appledoc 2.2.1 (build 1334)</a>.</p>

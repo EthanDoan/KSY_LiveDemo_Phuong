@@ -11,34 +11,60 @@
 #import "KSYPlayerVC.h"
 #import "KSYProberVC.h"
 #import "KSYMonkeyTestVC.h"
-#import "KSYSQLite.h"
-#import "KSYDBCreater.h"
+#import "KSYNetTrackerVC.h"
+#import "KSYVideoListVC.h"
+#ifndef KSYPlayer_Demo
 #import "KSYPresetCfgVC.h"
 #import "KSYRecordVC.h"
-#import "KSYNetTrackerVC.h"
 #import "KSYSimplestStreamerVC.h"
 #import "KSYHorScreenStreamerVC.h"
+#import "KSYBrushStreamerVC.h"
 #import "KSYBgpStreamerVC.h"
-#import "KSYVideoListVC.h"
+#endif
 
-@interface KSYLiveVC ()<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate>{
-    UITextField     *_textFiled;
-    //扫描二维码按钮  Scan the two-dimensional code button
+typedef NS_ENUM(NSInteger, KSYDemoMenuType){
+    KSYDemoMenuType_PLAY = 0,                     //播放
+    KSYDemoMenuType_STREAM,                       //推流
+    KSYDemoMenuType_RECORD,                       //录制
+    KSYDemoMenuType_TEST,                         //测试
+};
+
+@interface KSYLiveVC ()<UITextFieldDelegate,UIPickerViewDelegate,UIPickerViewDataSource>{
+    //扫描二维码按钮
     UIButton        *_buttonQR;
-    //关闭键盘按钮  Close the keyboard button
-    UIButton        *_buttonClose;
-    //控制器栏  Controller bar
-    UITableView     *_ctrTableView;
-    //首页地址栏（推流地址、拉流地址、录制文件）  首页地址栏（推流地址、拉流地址、录制文件） Home address bar (push address, pull stream address, record file)
-    UITableView     *_addressTable;
-    //存放控制器栏的多个按钮的名称  The name of the multiple buttons that hold the controller bar
-    NSArray         *_controllers;
+    //关于按钮
+    UIButton        *_buttonAbout;
     CGFloat         _width;
     CGFloat         _height;
-    //存放推流地址、拉流地址、录制文件名  Store the push stream address, pull the flow address, record the file name
-    NSMutableArray  *_addressMulArray;
+    //功能列表
+    UIPickerView *_pickerMenu;
+    //地址列表
+    UIPickerView *_pickerAddress;
+    //执行按钮
+    UIButton *_buttonDone;
+    //存放控制器栏的多个按钮的名称
+    NSMutableArray *_controllers;
+    //控制器的名称和创建方法的字典
+    NSMutableDictionary * _vcNameDict;
+    //存放多个推流地址的名称
+    NSMutableArray *_arrayStreamAddress;
+    //存放多个播放地址
+    NSMutableArray *_arrayPlayAddress;
+    //存放多个录制文件名
+    NSMutableArray *_arrayRecordFileName;
+    //功能列表标题
+    UILabel *_labelMenu;
+    //地址列表标题
+    UILabel *_labelAddress;
+    //当前所选功能类型
+    KSYDemoMenuType _type;
+    //当前选中的功能
+    
+    //当前选中的地址
+    NSString *_currentSelectUrl;
+    
 }
-
+@property NSInteger selectMenuRow;
 @end
 
 @implementation KSYLiveVC
@@ -46,36 +72,57 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"KSYDEMO";
+    _labelMenu = [self addLabelWithText:@"Demo 功能列表" textColor:[UIColor blueColor]];
+    _labelAddress = [self addLabelWithText:@"播放地址列表" textColor:[UIColor blueColor]];
+    //添加开始按钮
+    _buttonDone = [self addButton:@"开始"];
     self.view.backgroundColor = [UIColor whiteColor];
-    _addressMulArray = [NSMutableArray new];
-    
-//    NSString * uuidStr =[[[UIDevice currentDevice] identifierForVendor] UUIDString];
-//    NSString *devCode  = [[uuidStr substringToIndex:3] lowercaseString];
+    NSString * uuidStr =[[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    NSString *devCode  = [[uuidStr substringToIndex:3] lowercaseString];
     //推流地址
-//    NSString *streamSrv  = @"rtmp://test.uplive.ks-cdn.com/live";
+//    NSString *streamSrv  = @"rtmp://mobile.kscvbu.cn/live";
 //    NSString *streamUrl      = [ NSString stringWithFormat:@"%@/%@", streamSrv, devCode];
-//    NSLog(@"streamUrl: %@", streamUrl);
     
     NSString *streamUrl = @"rtmp://a.rtmp.youtube.com/live2/m1zh-e727-wzaz-3fuk";
     
+    _arrayStreamAddress = [NSMutableArray arrayWithObjects:streamUrl,nil];
     
+    //推流地址对应的拉流地址
+    NSString *streamPlaySrv = @"http://mobile.kscvbu.cn:8080/live";
+    NSString *streamPlayPostfix = @".flv";
+    NSString *streamPlayUrl = [ NSString stringWithFormat:@"%@/%@%@", streamPlaySrv, devCode,streamPlayPostfix];
     
-//    NSString *streamUrl = @"rtmp://rtmp-api.facebook.com:80/rtmp/277834999361622?ds=1&s_e=4&s_l=1&a=ATh5x2UQVzeHCAkG";
-
     //拉流地址
-    NSString *playUrl  = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
-    
+    NSString *playUrl = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
+    _arrayPlayAddress = [NSMutableArray array];
+    [_arrayPlayAddress addObject:playUrl];
+    [_arrayPlayAddress addObject:streamPlayUrl];
+    [_arrayPlayAddress addObject:@"RecordAv.mp4"];
+    //初始化时的默认Url
+    _currentSelectUrl = _arrayPlayAddress[0];
     //录制文件名
     NSString *recordFile = @"RecordAv.mp4";
-    //将推流地址、拉流地址、文件名放到地址数组中
-    [_addressMulArray addObject:streamUrl];
-    [_addressMulArray addObject:playUrl];
-    [_addressMulArray addObject:recordFile];
+    _arrayRecordFileName = [NSMutableArray arrayWithObjects:recordFile,nil];
     [self initVariable];
     //布局UI
     [self initLiveVCUI];
-    //zw
-    [KSYDBCreater initDatabase];
+    
+}
+
+//添加一个居中的Label
+- (UILabel *)addLabelWithText:(NSString *)text textColor:(UIColor*)textColor {
+    UILabel *label = [[UILabel alloc] init];
+    label.backgroundColor = [UIColor clearColor];
+    label.textColor = textColor;
+    label.numberOfLines = -1;
+    label.text = text;
+    label.textAlignment = NSTextAlignmentCenter;
+    label.layer.masksToBounds = YES;
+    label.layer.borderWidth   = 1;
+    label.layer.borderColor   = [UIColor blackColor].CGColor;
+    label.layer.cornerRadius  = 2;
+    [self.view addSubview:label];
+    return label;
 }
 
 - (UITextField *)addTextField{
@@ -90,16 +137,140 @@
     return text;
 }
 
-- (UITableView *)addTableView{
-    //生成一个UITableView
-    UITableView *teble = [[UITableView alloc]init];
-    teble.layer.masksToBounds = YES;
-    teble.layer.borderColor   = [UIColor blackColor].CGColor;
-    teble.layer.borderWidth   = 1;
-    teble.delegate   = self;
-    teble.dataSource = self;
-    [self.view addSubview:teble];
-    return teble;
+-(UIPickerView *)addPickerView{
+    //生成一个UIPickerView
+    UIPickerView *picker = [[UIPickerView alloc]init];
+    [self.view addSubview: picker];
+    picker.hidden     = NO;
+    picker.delegate   = self;
+    picker.dataSource = self;
+    picker.showsSelectionIndicator= YES;
+    picker.backgroundColor = [UIColor colorWithWhite:0.8 alpha:0.3];
+    picker.layer.masksToBounds = YES;
+    picker.layer.borderWidth   = 1;
+    picker.layer.borderColor   = [UIColor blackColor].CGColor;
+    picker.layer.cornerRadius  = 2;
+    return picker;
+}
+
+//指定pickerview有几个表盘
+-(NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
+{
+    return 1;
+}
+
+//指定每个表盘上有几行数据
+-(NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
+{
+    NSInteger result = 0;
+    if (pickerView == _pickerMenu) {
+        result = _controllers.count;
+    }else if(pickerView == _pickerAddress && _type == KSYDemoMenuType_STREAM){
+        //推流状态
+        result = _arrayStreamAddress.count;
+    }else if(pickerView == _pickerAddress && _type == KSYDemoMenuType_PLAY){
+        //拉流状态
+        result = _arrayPlayAddress.count;
+    }else if(pickerView == _pickerAddress && _type == KSYDemoMenuType_TEST){
+        result = 0;
+    }else if(pickerView == _pickerAddress && _type == KSYDemoMenuType_RECORD){
+        result = _arrayRecordFileName.count;
+    }
+    return result;
+}
+
+//判断是哪个pickerview，返回相应的title
+- (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
+{
+    NSString *str = nil;
+    if (pickerView == _pickerMenu){
+        str = _controllers[row];
+    }else if(pickerView == _pickerAddress && _type == KSYDemoMenuType_STREAM){
+        str = _arrayStreamAddress[row];
+    }else if(pickerView == _pickerAddress && _type == KSYDemoMenuType_PLAY){
+        str = _arrayPlayAddress[row];
+    }else if(pickerView == _pickerAddress && _type == KSYDemoMenuType_RECORD){
+        str = _arrayRecordFileName[row];
+    }
+    return str;
+}
+
+//选中某行后回调的方法，获得选中结果
+- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
+{
+    if (pickerView == _pickerMenu)//功能列表
+    {
+        self.selectMenuRow = row;
+        if (row >= 0 && row <= 3) {
+            //类型为播放
+            _type = KSYDemoMenuType_PLAY;
+            _labelAddress.text = @"播放地址列表";
+            _currentSelectUrl = _arrayPlayAddress[0];
+        }else if(row >= 5 && row <= 9){
+            //类型为推流
+            _type = KSYDemoMenuType_STREAM;
+            _labelAddress.text = @"推流地址列表";
+            _currentSelectUrl = _arrayStreamAddress[0];
+        }else if(row == 10){
+            //类型为录制
+            _type = KSYDemoMenuType_RECORD;
+            _labelAddress.text = @"录制文件名";
+            _currentSelectUrl = _arrayRecordFileName[0];
+        }else if(row == 4 || row == 11){
+            //类型为测试
+            _type = KSYDemoMenuType_TEST;
+        }
+        [self UIAtType:_type];
+        [_pickerAddress reloadAllComponents];
+     //   [self initFrame];
+    }else if(pickerView == _pickerAddress && _type == KSYDemoMenuType_STREAM){
+        //当前选中的推流地址列表
+        _currentSelectUrl = _arrayStreamAddress[row];
+    }else if(pickerView == _pickerAddress && _type == KSYDemoMenuType_PLAY){
+        //当前选中的拉流地址列表
+        _currentSelectUrl = _arrayPlayAddress[row];
+    }
+}
+//控件布局
+-(void)UIAtType:(KSYDemoMenuType)type{
+    if (type == KSYDemoMenuType_PLAY || type ==KSYDemoMenuType_STREAM || type == KSYDemoMenuType_RECORD) {
+        _pickerAddress.hidden = NO;
+        _buttonAbout.hidden = NO;
+        _buttonQR.hidden = NO;
+        _labelAddress.hidden = NO;
+        _buttonDone.frame = CGRectMake(1, CGRectGetMaxY(_pickerAddress.frame), _width - 2, _height- CGRectGetMaxY(_pickerAddress.frame));
+    }else{
+        _pickerAddress.hidden = YES;
+        _buttonAbout.hidden = YES;
+        _buttonQR.hidden = YES;
+        _labelAddress.hidden = YES;
+        _buttonDone.frame = CGRectMake(1, CGRectGetMaxY(_pickerMenu.frame), _width - 2, _height - CGRectGetMaxY(_pickerMenu.frame));
+    }
+}
+//自定义pickerView中的字体
+- (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view{
+    if (pickerView == _pickerAddress) {
+        UILabel* pickerLabel = (UILabel*)view;
+        if (!pickerLabel){
+            pickerLabel = [[UILabel alloc] init];
+            pickerLabel.adjustsFontSizeToFitWidth = YES;
+            [pickerLabel setBackgroundColor:[UIColor clearColor]];
+            [pickerLabel setFont:[UIFont systemFontOfSize:15]];
+        }
+        pickerLabel.text=[self pickerView:pickerView titleForRow:row forComponent:component];
+        return pickerLabel;
+    }else{
+        UILabel* pickerLabel = (UILabel*)view;
+        if (!pickerLabel){
+            pickerLabel = [[UILabel alloc] init];
+            pickerLabel.adjustsFontSizeToFitWidth = YES;
+            [pickerLabel setBackgroundColor:[UIColor clearColor]];
+            [pickerLabel setFont:[UIFont systemFontOfSize:20]];
+        }
+        pickerLabel.textAlignment = NSTextAlignmentCenter;
+        pickerLabel.text=[self pickerView:pickerView titleForRow:row forComponent:component];
+        return pickerLabel;
+    }
 }
 
 - (UIButton*)addButton:(NSString*)title{
@@ -114,62 +285,84 @@
      forControlEvents:UIControlEventTouchUpInside];
     return button;
 }
-
+- (void) addMenu:(NSString*)name withBlk:(id) blk {
+    [_controllers addObject:name];
+    [_vcNameDict setValue:blk forKey:name];
+}
 - (void)initVariable{
-    _width  = self.view.frame.size.width;
-    _height = self.view.frame.size.height;
-    _controllers = [NSArray arrayWithObjects:
-                    @"Play demo",//播放demo
-                    @"file format detection",//文件格式探测
-                    @"play the automated test ",//播放自动化测试
-                    @"network detection",//网络探测
-                    @"recording short stream video",//录制推流短视频
-                    @"record play short video",
-                    @"push the flow demo",//推流demo
-                    @"minimalist flow",//极简推流
-                    @"half-screen flow",//半屏推流
-                    @"background image flow",//背景图片推流
-                    @"video list",//视频列表
-                    nil];
+    _vcNameDict = [[NSMutableDictionary alloc] init];
+    _controllers = [[NSMutableArray alloc] init];
+    [self addMenu:@"播放demo"     withBlk:^(NSURL* url){return [[KSYPlayerCfgVC alloc]initWithURL:url fileList:nil];} ];
+    [self addMenu:@"视频列表"      withBlk:^(NSURL* url){return [[KSYVideoListVC alloc] initWithUrl:url];} ];
+    [self addMenu:@"文件格式探测"   withBlk:^(NSURL* url){return [[KSYProberVC alloc]initWithURL:url];} ];
+    [self addMenu:@"播放自动化测试" withBlk:^(NSURL* url){return [[KSYMonkeyTestVC alloc] init];} ];
+#ifndef KSYPlayer_Demo
+    [self addMenu:@"录制播放短视频" withBlk:^(NSURL* url){return [[KSYRecordVC alloc]initWithURL:url];} ];
+    [self addMenu:@"推流demo"     withBlk:^(NSURL* url){return [[KSYPresetCfgVC alloc]initWithURL:url];} ];
+    [self addMenu:@"极简推流"      withBlk:^(NSURL* url){return [[KSYSimplestStreamerVC alloc] initWithUrl:url];} ];
+    [self addMenu:@"半屏推流"      withBlk:^(NSURL* url){return [[KSYHorScreenStreamerVC alloc] initWithUrl:url];} ];
+    [self addMenu:@"画笔推流"      withBlk:^(NSURL* url){return [[KSYBrushStreamerVC alloc] initWithUrl:url];} ];
+    [self addMenu:@"背景图片推流"   withBlk:^(NSURL* url){return [[KSYBgpStreamerVC alloc] initWithUrl:url];} ];
+    [self addMenu:@"录制推流短视频" withBlk:^(NSURL* url){
+        KSYPresetCfgVC *preVC = [[KSYPresetCfgVC alloc]initWithURL:url];
+        [preVC.cfgView.btn0 setTitle:@"开始录制" forState:UIControlStateNormal];
+        preVC.cfgView.btn1.enabled = NO;
+        preVC.cfgView.btn3.enabled = NO;
+        return preVC;}];
+#endif
+    [self addMenu: @"网络探测" withBlk:^(NSURL* url){return [[KSYNetTrackerVC alloc]init];}];
 }
 
-
 - (void)initFrame{
+    _width  = self.view.frame.size.width;
+    _height = self.view.frame.size.height;
     //设置各个空间的fram
     CGFloat textY   = [[UIApplication sharedApplication] statusBarFrame].size.height;
     CGFloat btnH    = 30;
-    CGFloat btnW    = 80;
-    _buttonQR.frame = CGRectMake(20, textY+5, btnW, btnH);
-    _buttonClose.frame = CGRectMake(_width-20-btnW, textY+5, btnW, btnH);
+    CGFloat btnW   = 80;
     
+    _buttonQR.frame = CGRectMake(20, textY + 5, btnW, btnH);
+    _buttonAbout.frame = CGRectMake(_width - 20 - btnW, textY + 5, btnW, btnH);
     textY += (btnH+10);
-    
+    UIInterfaceOrientation ori = [[UIApplication sharedApplication] statusBarOrientation];
+    BOOL bLandscape = UIInterfaceOrientationIsLandscape(ori);
     CGFloat textX   = 1;
-    CGFloat textWdh = _width-2;
-    CGFloat textHgh = 30;
-    CGRect textRect = CGRectMake(textX, textY, textWdh, textHgh);
-    _textFiled.frame = textRect;
-    
-    CGFloat adTaY   = textY + textHgh;
-    CGFloat adTaHgh = _height / 2 - adTaY;
-    CGRect addressTableRect = CGRectMake(textX, adTaY, textWdh, adTaHgh);
-    _addressTable.frame = addressTableRect;
-    
-    CGFloat tableX   = 1;
-    CGFloat tableY   = _height / 2;
-    CGFloat tableWdh = _width  - 2;
-    CGFloat tableHgh = _height / 2;
-    CGRect tableRect = CGRectMake(tableX, tableY, tableWdh, tableHgh);
-    _ctrTableView.frame = tableRect;
+    CGFloat textWdh = bLandscape ? (_width-4)/2: _width - 2;
+    CGRect textRect = CGRectMake(textX, textY, textWdh, btnH);
+    _labelMenu.frame = textRect;
+    textY += btnH;
+    //设置功能列表的picker的frame
+    CGFloat adTaHgh = 216.0;
+   _pickerMenu.frame = CGRectMake(textX, textY, textWdh, adTaHgh);
+    textY += adTaHgh;
+    if (bLandscape) {
+        textY =_labelMenu.frame.origin.y;
+        textX = textWdh+2;
+    }
+    //设置播放地址的标题frame
+    _labelAddress.frame = CGRectMake(textX,  textY, textWdh, btnH);
+    textY += btnH;
+    //设置地址列表的picker的frame
+    _pickerAddress.frame = CGRectMake(textX, textY, textWdh, adTaHgh);
+    textY += adTaHgh;
+    textY = _pickerAddress.isHidden ? CGRectGetMaxY(_pickerMenu.frame) : textY;
+    btnH = _height - textY;
+    //设置开始按钮
+    _buttonDone.frame = CGRectMake(1, textY, _width,  btnH);
 }
+
 - (void)initLiveVCUI{
     //初始化UI控件
-    _textFiled    = [self addTextField];
-    _addressTable = [self addTableView];
-    _ctrTableView = [self addTableView];
-    _buttonQR     = [self addButton:@"Scan QR code"];//扫描二维码
-    _buttonClose  = [self addButton:@"Close keyboard"];//关闭键盘
+    //添加功能菜单和地址列表的picker
+    _pickerMenu = [self addPickerView];
+    _pickerAddress = [self addPickerView];
+    _buttonQR     = [self addButton:@"扫描二维码"];
+    _buttonAbout  = [self addButton:@"关于"];
     [self initFrame];
+    // reload last choise
+    _selectMenuRow = [self loadSelectMenuRow];
+    [_pickerMenu selectRow:_selectMenuRow inComponent:0 animated:YES];
+    [self pickerView:_pickerMenu didSelectRow:_selectMenuRow inComponent:0];
 }
 
 - (IBAction)onBtn:(id)sender {
@@ -177,163 +370,41 @@
         //进入到扫描二维码的视图
         [self scanQR];
     }
-    else if (sender == _buttonClose){
-        //关闭弹出的键盘
-        [self closeKeyBoard];
+    else if (sender == _buttonAbout){
+        NSString *build = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString *)kCFBundleVersionKey];
+        //进入帮助页面
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"金山云直播SDK" message:nil delegate:nil cancelButtonTitle:nil otherButtonTitles:@"确定", nil];
+        NSString * fmt = @"版本: %@\n"
+        @"QQ群: 574179720 \n"
+        @"(iOS)https://github.com/ksvc/KSYLive_iOS \n"
+        @"(Android)https://github.com/ksvc/KSYLive_Android";
+        alert.message = [NSString stringWithFormat:fmt, build];
+        alert.alertViewStyle = UIAlertViewStyleDefault;
+        [alert show];
     }
-}
-
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    //返回不同tableView的section的个数
-    if (tableView == _ctrTableView) {
-        return 1;
-    }else if(tableView == _addressTable){
-        return 3;
-    }else{
-        return 0;
+    else if(sender == _buttonDone){
+        UIViewController* vc = nil;
+        NSURL *url = [NSURL URLWithString:_currentSelectUrl];
+        NSString *scheme = [url scheme];
+        if( ![scheme isEqualToString:@"rtmp"] &&
+            ![scheme isEqualToString:@"http"] &&
+            ![scheme isEqualToString:@"https"] &&
+            ![scheme isEqualToString:@"rtsp"]) {
+            NSString * urlStr = [NSString stringWithFormat:@"%@%s%@", NSHomeDirectory(), "/Documents/",_currentSelectUrl];
+            url = [NSURL URLWithString:urlStr];
+        }
+        if (_selectMenuRow >= 0 && _selectMenuRow < _controllers.count) {
+            NSString * vcName = _controllers[_selectMenuRow];
+            UIViewController* (^creatVCblk)(NSURL* url) = _vcNameDict[vcName];
+            vc = creatVCblk( url);
+        }
+        else {
+            NSLog(@"menu error!!");
+        }
+        if (vc){
+            [self presentViewController:vc animated:YES completion:nil];
+        }
     }
-}
-
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    //返回不同tableView的cell数量
-    if (tableView == _ctrTableView) {
-        return _controllers.count;
-    }else if(tableView == _addressTable){
-        return 1;
-    }else{
-        return 0;
-    }
-    
-}
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    //设置不同tableView的cell的内容
-    
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"identify"];
-    if (!cell) {
-        cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"identify"];
-    }
-    if (tableView == _ctrTableView) {
-        cell.textLabel.text = _controllers[indexPath.row];
-    }else if(tableView == _addressTable){
-        if (indexPath.section == 0) {
-            cell.textLabel.text = _addressMulArray[indexPath.section];
-        }
-        else if (indexPath.section == 1){
-            cell.textLabel.text = _addressMulArray[indexPath.section];
-        }
-        else if (indexPath.section == 2){
-            cell.textLabel.text = _addressMulArray[indexPath.section];
-        }
-        cell.textLabel.font = [UIFont systemFontOfSize:14];
-        UIView *cellView = [[UIView alloc]initWithFrame:cell.frame];
-        cellView.backgroundColor = [UIColor grayColor];
-        cell.backgroundView = cellView;
-    }
-    return cell;
-}
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    
-    if (tableView == _ctrTableView) {
-        if (_textFiled.text.length > 0) {
-            NSLog(@"url:%@",_textFiled.text);
-            NSString *dir;
-            NSURL *url = [NSURL URLWithString:_textFiled.text];
-            NSString *scheme = [url scheme];
-            if(![scheme isEqualToString:@"rtmp"] &&
-                ![scheme isEqualToString:@"http"] &&
-                ![scheme isEqualToString:@"https"] &&
-                ![scheme isEqualToString:@"rtsp"]){
-                dir = [NSHomeDirectory() stringByAppendingString:@"/Documents/"];
-                url = [NSURL URLWithString:[dir stringByAppendingPathComponent:_textFiled.text]];
-            }
-            UIViewController* vc = nil;
-            if (indexPath.row == 0) {
-                //播放Demo
-                vc = [[KSYPlayerCfgVC alloc]initWithURL:url fileList:nil];
-            }else if (indexPath.row == 1){
-                //文件格式探测
-                vc = [[KSYProberVC alloc]initWithURL:url];
-            }else if(indexPath.row == 2){
-                //自动化测试
-                vc = [[KSYMonkeyTestVC alloc] init];
-            }
-            else if (indexPath.row == 3){
-                //网络连通性探测
-                vc = [[KSYNetTrackerVC alloc]init];
-            }
-            else if (indexPath.row == 4){
-                //录制推流短视频
-                KSYPresetCfgVC *preVC = [[KSYPresetCfgVC alloc]initWithURL:[dir stringByAppendingPathComponent:_textFiled.text]];
-                [preVC.cfgView.btn0 setTitle:@"Start recording" forState:UIControlStateNormal];//开始录制
-                preVC.cfgView.btn1.enabled = NO;
-                preVC.cfgView.btn3.enabled = NO;
-                vc = preVC;
-            }
-            else if(indexPath.row == 5){
-                //录制播放短视频
-                vc = [[KSYRecordVC alloc]initWithURL:url];
-            }
-            else if(indexPath.row == 6){
-                //推流Demo
-                vc = [[KSYPresetCfgVC alloc]initWithURL:_textFiled.text];
-            }
-            else if(indexPath.row == 7){
-                //极简推流
-                vc = [[KSYSimplestStreamerVC alloc] initWithUrl:_textFiled.text];
-            }
-            else if(indexPath.row == 8){
-                //半屏推流
-                vc = [[KSYHorScreenStreamerVC alloc] initWithUrl:_textFiled.text];
-            }
-            else if(indexPath.row == 9){
-                //背景图片推流
-                vc = [[KSYBgpStreamerVC alloc] initWithUrl:_textFiled.text];
-            }
-            else if(indexPath.row == 10){
-                //视频列表
-                vc = [[KSYVideoListVC alloc] init];
-            }
-            if (vc){
-                [self presentViewController:vc animated:YES completion:nil];
-            }
-        }
-    }else if(tableView == _addressTable){
-        //修改地址
-        if (indexPath.section == 0) {
-            _textFiled.text = _addressMulArray[indexPath.section];
-        }
-        else if (indexPath.section == 1){
-            _textFiled.text = _addressMulArray[indexPath.section];
-        }
-        else if (indexPath.section == 2){
-            _textFiled.text = _addressMulArray[indexPath.section];
-        }
-        [_textFiled resignFirstResponder];
-    }
-}
-#pragma mark - 返回每组头标题名称 - Returns the name of each set of headers
--(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
-    if (tableView == _ctrTableView) {
-        return @"Controller bar";//控制器栏
-    }else if (tableView == _addressTable){
-        if (section == 0) {
-            return @"Push the flow address";//推流地址
-        }else if (section == 1){
-            return @"Pull the stream address";//拉流地址
-        }else if (section == 2){
-            return @"Record the file";//录制文件
-        }
-        
-    }
-    return nil;
-}
-- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
-    return 30;
-}
-- (void)closeKeyBoard{
-    //收回键盘
-    [_textFiled resignFirstResponder];
 }
 - (void)scanQR{
     //扫描二维码
@@ -341,28 +412,51 @@
     QRViewController *QRview = [[QRViewController alloc]init];
     QRview.getQrCode = ^(NSString *stringQR){
         //扫描完成后显示地址
-        [wself showAddress:stringQR];
+        NSString *QRUrl = stringQR;
+        //得到二维码扫描的地址添加到播放地址的数组中
+        if (_type == KSYDemoMenuType_PLAY) {
+            [_arrayPlayAddress insertObject:QRUrl atIndex:0];
+            _currentSelectUrl = _arrayPlayAddress[0];
+        }else if(_type == KSYDemoMenuType_STREAM){
+            [_arrayStreamAddress insertObject:QRUrl atIndex:0];
+            _currentSelectUrl = _arrayStreamAddress[0];
+        }else if(_type == KSYDemoMenuType_RECORD){
+            [_arrayRecordFileName insertObject:QRUrl atIndex:0];
+            _currentSelectUrl = _arrayRecordFileName[0];
+        }
+        [_pickerAddress reloadAllComponents];
+        [wself dismissViewControllerAnimated:FALSE completion:nil];
     };
     [self presentViewController:QRview animated:YES completion:nil];
 }
 
-- (void)showAddress:(NSString *)str{
-    _textFiled.text = str;
+- (BOOL) shouldAutorotate {
+    return YES;
 }
-- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
-    [_textFiled resignFirstResponder];
-}
-- (void)textFieldDidBeginEditing:(UITextField *)textField{
-    //    [self myReloadData];
-}
-
-- (void)myReloadData{
-    NSArray *addressArray = [[KSYSQLite sharedInstance] getAddress];
-    for(NSDictionary *dic in addressArray){
-        NSString *address = [dic objectForKey:@"address"];
-        [_addressMulArray addObject:address];
-    }
-    [_addressTable reloadData];
+#pragma mark - ui rotate
+- (void)viewWillTransitionToSize:(CGSize)size
+       withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+    }completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+        [self initFrame];
+    }];
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 }
 
+#pragma mark - User default
+@synthesize selectMenuRow = _selectMenuRow;
+- (void) setSelectMenuRow:(NSInteger)selectMenuRow {
+    _selectMenuRow = selectMenuRow;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setInteger:selectMenuRow forKey:@"selectMenuRow"];
+    [defaults synchronize];
+}
+- (NSInteger)selectMenuRow {
+    return _selectMenuRow;
+}
+- (NSInteger) loadSelectMenuRow {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    _selectMenuRow = [defaults integerForKey:@"selectMenuRow"];
+    return _selectMenuRow;
+}
 @end

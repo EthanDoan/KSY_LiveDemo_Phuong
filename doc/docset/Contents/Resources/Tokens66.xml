@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Tokens version="1.0">
-	<File path="Constants/KSY_NETTRACKER_ACTION.html">
+	<File path="Constants/KSYBgmPlayerState.html">
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/c/tdef/KSY_NETTRACKER_ACTION</TokenIdentifier>
-			<Abstract type="html">探测方式</Abstract>
-			<DeclaredIn>KSYNetTracker.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/c/tdef/KSYBgmPlayerState</TokenIdentifier>
+			<Abstract type="html">音频播放状态</Abstract>
+			<DeclaredIn>KSYTypeDef.h</DeclaredIn>
             
 			
 			<NodeRef refid="66"/>
@@ -14,21 +14,71 @@
 		
         
         <Token>
-            <TokenIdentifier>//apple_ref/c/econst/KSY_NETTRACKER_ACTION_MTR</TokenIdentifier>
-            <Abstract type="html">mtr方式，探测链路上每个节点</Abstract>
-            <Declaration>KSY_NETTRACKER_ACTION_MTR</Declaration>
+            <TokenIdentifier>//apple_ref/c/econst/KSYBgmPlayerStateInit</TokenIdentifier>
+            <Abstract type="html">初始状态</Abstract>
+            <Declaration>KSYBgmPlayerStateInit</Declaration>
             
-            <DeclaredIn>KSYNetTracker.h</DeclaredIn>
+            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
             
             <NodeRef refid="66"/>
         </Token>
         
         <Token>
-            <TokenIdentifier>//apple_ref/c/econst/KSY_NETTRACKER_ACTION_PING</TokenIdentifier>
-            <Abstract type="html">ping方式，直接探测终点</Abstract>
-            <Declaration>KSY_NETTRACKER_ACTION_PING</Declaration>
+            <TokenIdentifier>//apple_ref/c/econst/KSYBgmPlayerStateStarting</TokenIdentifier>
+            <Abstract type="html">背景音正在播放</Abstract>
+            <Declaration>KSYBgmPlayerStateStarting</Declaration>
             
-            <DeclaredIn>KSYNetTracker.h</DeclaredIn>
+            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
+            
+            <NodeRef refid="66"/>
+        </Token>
+        
+        <Token>
+            <TokenIdentifier>//apple_ref/c/econst/KSYBgmPlayerStateStopped</TokenIdentifier>
+            <Abstract type="html">背景音停止</Abstract>
+            <Declaration>KSYBgmPlayerStateStopped</Declaration>
+            
+            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
+            
+            <NodeRef refid="66"/>
+        </Token>
+        
+        <Token>
+            <TokenIdentifier>//apple_ref/c/econst/KSYBgmPlayerStatePlaying</TokenIdentifier>
+            <Abstract type="html">背景音正在播放</Abstract>
+            <Declaration>KSYBgmPlayerStatePlaying</Declaration>
+            
+            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
+            
+            <NodeRef refid="66"/>
+        </Token>
+        
+        <Token>
+            <TokenIdentifier>//apple_ref/c/econst/KSYBgmPlayerStatePaused</TokenIdentifier>
+            <Abstract type="html">背景音暂停</Abstract>
+            <Declaration>KSYBgmPlayerStatePaused</Declaration>
+            
+            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
+            
+            <NodeRef refid="66"/>
+        </Token>
+        
+        <Token>
+            <TokenIdentifier>//apple_ref/c/econst/KSYBgmPlayerStateError</TokenIdentifier>
+            <Abstract type="html">背景音播放出错</Abstract>
+            <Declaration>KSYBgmPlayerStateError</Declaration>
+            
+            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
+            
+            <NodeRef refid="66"/>
+        </Token>
+        
+        <Token>
+            <TokenIdentifier>//apple_ref/c/econst/KSYBgmPlayerStateInterrupted</TokenIdentifier>
+            <Abstract type="html">背景音被打断</Abstract>
+            <Declaration>KSYBgmPlayerStateInterrupted</Declaration>
+            
+            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
             
             <NodeRef refid="66"/>
         </Token>

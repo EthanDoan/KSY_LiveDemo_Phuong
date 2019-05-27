@@ -1,12 +1,28 @@
 # [KSY Live iOS SDK](http://ksvc.github.io/KSYLive_iOS/doc/html/index.html)
 
+[![Apps Using](https://img.shields.io/cocoapods/at/libksygpulive.svg?label=Apps%20Using%20libksygpulive&colorB=28B9FE)](http://cocoapods.org/pods/libksygpulive)[![Downloads](https://img.shields.io/cocoapods/dt/libksygpulive.svg?label=Total%20Downloads%20libksygpulive&colorB=28B9FE)](http://cocoapods.org/pods/libksygpulive)
+
+
+[![Apps Using](https://img.shields.io/cocoapods/at/libksygpulive_ks3.svg?label=Apps%20Using%20libksygpulive_ks3&colorB=28B9FE)](http://cocoapods.org/pods/libksygpulive_ks3)
+[![Downloads](https://img.shields.io/cocoapods/dt/libksygpulive_ks3.svg?label=Total%20Downloads%20libksygpulive_ks3&colorB=28B9FE)](http://cocoapods.org/pods/libksygpulive_ks3)
+
+
 [![Build Status](https://travis-ci.org/ksvc/KSYLive_iOS.svg?branch=master)](https://travis-ci.org/ksvc/KSYLive_iOS)
+[![Latest release](https://img.shields.io/github/release/ksvc/KSYLive_iOS.svg)](https://github.com/ksvc/KSYLive_iOS/releases/latest)
 [![CocoaPods platform](https://img.shields.io/cocoapods/p/libksygpulive.svg)](https://cocoapods.org/pods/libksygpulive)
-[![CocoaPods doc](https://img.shields.io/cocoapods/metrics/doc-percent/libksygpulive.svg)](http://cocoadocs.org/docsets/libksygpulive/)
 [![CocoaPods version](https://img.shields.io/cocoapods/v/libksygpulive.svg?label=pod_github)](https://cocoapods.org/pods/libksygpulive)
 [![CocoaPods version](https://img.shields.io/cocoapods/v/libksygpulive_ks3.svg?label=pod_ks3)](https://cocoapods.org/pods/libksygpulive_ks3)
+
+<pre>Source Type:<b> Binary SDK</b>
+Charge Type:<b> free of charge</b></pre>
+
 ## 阅读对象
 本文档面向所有使用[金山云直播SDK][libksygpulive]的开发、测试人员等, 要求读者具有一定的iOS编程开发经验，并且要求读者具备阅读[wiki][wiki]的习惯。
+
+|![live_1.png](https://raw.githubusercontent.com/wiki/ksvc/KSYLive_iOS/images/live_1.png)|![live_1.png](https://raw.githubusercontent.com/wiki/ksvc/KSYLive_iOS/images/live_2.png)|![live_1.png](https://raw.githubusercontent.com/wiki/ksvc/KSYLive_iOS/images/live_3.png)|
+
+|![live_4.png](https://raw.githubusercontent.com/wiki/ksvc/KSYLive_iOS/images/live_4.png)|![live_5.png](https://raw.githubusercontent.com/wiki/ksvc/KSYLive_iOS/images/live_5.png)|
+
 
 ## 一. 功能特性
 
@@ -46,14 +62,15 @@
 - [x] 支持[耳返](https://github.com/ksvc/KSYLive_iOS/wiki/micMonitor)
 - [x] 支持[画中画](https://github.com/ksvc/KSYLive_iOS/wiki/pip)推流
 - [x] 支持[预览和采集分辨率分别设置,支持任意分辨率](https://github.com/ksvc/KSYLive_iOS/wiki/customOutputSize)
-- [x] 支持一对一[连麦](https://github.com/ksvc/KSYLive_iOS/wiki/rtc)
+- [x] 支持[第三方连麦](https://github.com/ksvc/KSYDiversityLive_iOS/tree/master/agoraRtc)
 - [x] [场景编码](https://github.com/ksvc/KSYLive_iOS/wiki/liveScene)
 - [x] 支持软编、硬编的[性能编码模式](https://github.com/ksvc/KSYLive_iOS/wiki/liveScene)
 - [x] 支持[预览和推流分别镜像](https://github.com/ksvc/KSYLive_iOS/wiki/mirrored)
 - [x] [在线API 文档支持](http://ksvc.github.io/KSYLive_iOS/doc/html/index.html)
 - [x] 支持[边推边录](https://github.com/ksvc/KSYLive_iOS/wiki/bypassRecord)，在直播推流过程中同时保存录像文件
 - [x] 支持[立体声](https://github.com/ksvc/KSYLive_iOS/wiki/stereo)推流（双声道）
-
+- [x] 支持[涂鸦推流](https://github.com/ksvc/KSYLive_iOS/wiki/BrushStream)
+- [x] 支持[桌面录制、手游直播](https://github.com/ksvc/KSYAirStreamer_iOS)
 
 ### 1.3 播放特点
 - [x] 与系统播放器MPMoviePlayerController接口一致，可以无缝快速切换至KSYMediaPlayer；
@@ -89,13 +106,12 @@
 1. 2016.05.18 [耳返](https://github.com/ksvc/KSYLive_iOS/wiki/micMonitor)上线；
 1. 2016.06.12 [画中画](https://github.com/ksvc/KSYLive_iOS/wiki/pip)推流上线；
 1. 2016.06.27 支持短视频录制；
-1. 2016.08.04 [两人连麦](https://github.com/ksvc/KSYLive_iOS/wiki/rtc)内测；
 1. 2016.08.24 支持[纯音频](https://github.com/ksvc/KSYLive_iOS/wiki/pureAudioStream)推流，支持[后台推流](https://github.com/ksvc/KSYLive_iOS/wiki/backgroupStream)，支持视频动态发送开关；
 1. 2016.08.31 [场景编码](https://github.com/ksvc/KSYLive_iOS/wiki/liveScene)，有效提升直播画质；
 1. 2016.09.07 内建[新美颜](https://github.com/ksvc/KSYLive_iOS/wiki/filter)上线； 
 1. 2016.09.12 [kit类顶层代码开源](https://github.com/ksvc/KSYLive_iOS/tree/master/source), podspec 中将集成framework改为集成静态库
 1. 2016.09.21 特效滤镜上线;
-1. 2016.09.26 [双人连麦](https://github.com/ksvc/KSYRTCLive_iOS/releases/tag/v1.8.5)稳定版本上线;
+1. 2016.09.26 [双人连麦](https://github.com/ksvc/KSYDiversityLive_Android/tree/master/Agora)稳定版本上线;
 1. 2016.09.28 视频硬编[性能编码模式](https://github.com/ksvc/KSYLive_iOS/wiki/liveScene)上线。音频AAC硬编功能上线。网络自适应场景上线；
 1. 2016.10.19 支持[推流横竖屏动态变化](https://github.com/ksvc/KSYLive_iOS/wiki/dynamicOrientation)；
 1. 2016.10.20 支持[replaykit录屏推流](https://github.com/ksvc/KSYDiversityLive_iOS/tree/master/KSYReplayKit)；
@@ -103,8 +119,13 @@
 1. 2016.2.22 支持[动态帧率](https://github.com/ksvc/KSYLive_iOS/wiki/dynamicFPS)
 1. 2016.3.1 支持主播音频[采集变声](http://ksvc.github.io/KSYLive_iOS/doc/html/Classes/KSYAUAudioCapture.html#//api/name/effectTyped)
 1. 2017.3.14 支持[立体声](https://github.com/ksvc/KSYLive_iOS/wiki/stereo)推流
+1. 2017.5.16 支持[涂鸦推流](https://github.com/ksvc/KSYLive_iOS/wiki/BrushStream)
+1. 2017.7.7 支持[桌面录制、手游直播](https://github.com/ksvc/KSYAirStreamer_iOS)
+1. 2017.7.7 支持[iOS 11 HEVC 硬编推流](https://github.com/ksvc/KSYLive_iOS/wiki/enableH265)
+1. 2017.8.3 支持采集降噪
 
-### 2.2 近期工作  
+### 2.2 近期工作   
+
 1. 2017.03.xx 多视角直播;
 1. 2017.03.xx 背景音降噪;
 
@@ -142,34 +163,53 @@ $ git clone https://bitbucket.org/ksvc/ksylive_ios.git  --depth 1
 #### 3.2.3 使用Cocoapods 进行安装    
 通过Cocoapods 能将本SDK的静态库和代码下载到本地，只需要将类似如下语句中的一句加入你的Podfile：   
 ```ruby
-# 本地开发版 (sdk clone或下载到本地后)
-pod 'libksygpulive/libksygpulive', :path => '../'
-
-# 私有库 (直接指定SDK的github仓库地址)
-pod 'libksygpulive/libksygpulive', :git => 'https://github.com/ksvc/KSYLive_iOS.git'
-
-# 私有库 (直接指定SDK的github仓库地址和版本号)
-pod 'libksygpulive/libksygpulive', :git => 'https://github.com/ksvc/KSYLive_iOS.git', :tag => 'v1.8.0'
-
-# 更新repo
-pod repo update
-
-# 从cocoapod官方库Trunk获取spec, 从github下载sdk
+pod 'libksygpulive/KSYGPUResource'
 pod 'libksygpulive/libksygpulive'
+```
+执行 pod install即可.  
 
-# 从cocoapod官方库Trunk获取spec, 从金山云存储 ks3 下载sdk (国内速度较快)
-pod 'libksygpulive_ks3/libksygpulive'
-```     
-执行 pod install即可.      
-* 注意1: 不能将以上语句都加入Podfile, 他们作用是一样的, 只是Podspec读取位置不同.
-* 注意2: 如果pod install 时出现无法找到specification的提示, 请先更新repo     
+其中, 第一段libksygpulive为SDK名,第二段KSYGPUResource和libksygpulive为子模块名
 
-其中, libksygpulive为子模块, 为了满足不同用户的需求, libksygpulive中提供了4个不同的子模块:    
-* KSYMediaPlayer     : 用于直播的播放内核(支持格式精简)
+本SDK提供了多个不同的子模块以满足不同用户的需求:
+* KSYMediaPlayer     : 用于直播的播放内核(支持格式精简)
 * KSYMediaPlayer_vod : 用于点播的播放内核(支持格式丰富)
 * libksygpulive      : 用于直播推流和播放的SDK（直播推流功能和精简版本的播放SDK）
 * libksygpulive_265  : 用于直播推流和播放的SDK (支持265推流和精简版本的播放SDK)
-* KSYGPUResource     : 直播推流用到的资源文件, 主要用于特效滤镜
+* KSYGPUResource     : 直播推流用到的资源文件, 主要用于美颜和特效滤镜
+
+<details>
+<summary>Pod依赖进阶</summary>
+<b markdown=1>
+  
+* 本地开发版 (sdk clone或下载到本地后)
+``` 
+pod 'libksygpulive/libksygpulive', :path => '../'  
+```
+
+* 直接指定SDK的github仓库地址和版本号
+```
+pod 'libksygpulive/libksygpulive', :git => 'https://github.com/ksvc/KSYLive_iOS.git', :tag => 'v1.8.0'
+```
+
+* 从cocoapod官方库Trunk获取spec, 从github下载sdk
+```
+pod 'libksygpulive/libksygpulive'
+```
+
+* 从cocoapod官方库Trunk获取spec, 从金山云存储 ks3 下载sdk (国内速度较快)
+```
+pod 'libksygpulive_ks3/libksygpulive'
+```         
+
+* 如果pod install 时出现无法找到specification的提示, 请先更新repo
+```
+pod repo update
+```
+
+*  **注意1**: 不能将以上语句都加入Podfile, 他们作用是一样的, 只是Podspec读取位置不同.
+
+</b>
+</details>
 
 ### 3.2.4 GPUImage依赖
 
@@ -254,9 +294,21 @@ pod repo update
 请见github库：https://github.com/ksvc/KSYMediaPlayer_iOS.git
 
 ## 六. 反馈与建议
+### 6.1 反馈模板  
+
+| 类型    | 描述|
+| :---: | :---:| 
+|SDK名称|KSYLive_iOS|
+|SDK版本| v2.5.0|
+|设备型号| iphone7  |
+|OS版本| iOS 10 |
+|问题描述| 描述问题出现的现象  |
+|操作描述| 描述经过如何操作出现上述问题                     |
+|额外附件| 文本形式控制台log、crash报告、其他辅助信息（界面截屏或录像等） |
+
+### 6.2 联系方式
 * 主页：[金山云](http://www.ksyun.com/)
-* 邮箱：<zengfanping@kingsoft.com>
-* QQ讨论群：574179720 [视频云技术交流群] 
+
 * Issues:<https://github.com/ksvc/KSYLive_iOS/issues>
 
 <a href="http://www.ksyun.com/"><img src="https://raw.githubusercontent.com/wiki/ksvc/KSYLive_Android/images/logo.png" border="0" alt="金山云计算" /></a>

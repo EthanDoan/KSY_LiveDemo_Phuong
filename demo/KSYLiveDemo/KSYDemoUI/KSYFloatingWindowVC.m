@@ -11,7 +11,7 @@
 @interface FloatingView : KSYUIView
 
 @property UIButton * quitBtn;
-@property GPUImageView * preView;
+@property KSYGPUView * preView;
 @property UILabel * text;
 @property CGPoint loc_in;
 
@@ -21,11 +21,11 @@
 - (id) init {
     self = [super init];
     self.backgroundColor = [UIColor whiteColor];
-    _text  = [self addLable:@"Jinshan video cloud relying on the industry's leading codec technology and powerful distribution services, based on Jinshan Yun-class IaaS infrastructure, providing one-stop cloud straight, on-demand services. \ N Jinshan video cloud provides content production and viewing tools, that is, push the streaming SDK, with its perfect features, excellent compatibility and performance to meet the emerging business needs of customers, and then through the Jinshan Cube system and third-party platform common To achieve the prosperity of the video ecological chain. \ N \ n Jinshan cloud push stream SDK support H.264 / H.265 encoding, soft and hard, support a variety of beauty filter effects, even wheat, audio modules are constantly strengthening: the sound of sound, lifting tone, Sound, etc., weak network optimization module is also quite achievements: bit rate adaptive, network active detection, dynamic frame rate and so on. \ N Jinshan cloud play the SDK through the first screen seconds to open, live chase and other live optimization strategy to live to provide first-class live experience."]; //金山视频云依托业界领先的编解码技术与强大的分发服务，立足于金山云顶级的IaaS基础设施，提供一站式云直、点播服务。\n金山视频云提供内容生产及观看的工具，即推流播放SDK，凭借其完善的功能、卓越的兼容性及性能，满足客户不断涌现的业务需求，再通过金山魔方系统与第三方平台共同实现视频生态链的繁荣。\n\n金山云推流SDK支持H.264/H.265编码、软硬编，支持多种美颜滤镜特效、连麦，音频模块也在不断强化：美声、升降调、变声、混音等，弱网优化模块也颇有建树：码率自适应、网络主动探测、动态帧率等。\n金山云播放SDK通过首屏秒开、直播追赶等直播优化策略给直播提供一流的直播体验。
+    _text  = [self addLable:@"金山视频云依托业界领先的编解码技术与强大的分发服务，立足于金山云顶级的IaaS基础设施，提供一站式云直、点播服务。\n金山视频云提供内容生产及观看的工具，即推流播放SDK，凭借其完善的功能、卓越的兼容性及性能，满足客户不断涌现的业务需求，再通过金山魔方系统与第三方平台共同实现视频生态链的繁荣。\n\n金山云推流SDK支持H.264/H.265编码、软硬编，支持多种美颜滤镜特效、连麦，音频模块也在不断强化：美声、升降调、变声、混音等，弱网优化模块也颇有建树：码率自适应、网络主动探测、动态帧率等。\n金山云播放SDK通过首屏秒开、直播追赶等直播优化策略给直播提供一流的直播体验。"];
     _text.textAlignment = NSTextAlignmentCenter;
     _text.numberOfLines = 0;
 
-    _preView = [[GPUImageView alloc] init];
+    _preView = [[KSYGPUView alloc] init];
     
     UIPanGestureRecognizer *panGes = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(pan:)];
     [_preView addGestureRecognizer:panGes];

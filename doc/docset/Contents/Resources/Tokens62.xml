@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Tokens version="1.0">
-	<File path="Constants/KSYStreamState.html">
+	<File path="Constants/KSYAudioCodec.html">
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/c/tdef/KSYStreamState</TokenIdentifier>
-			<Abstract type="html">推流状态</Abstract>
+			<TokenIdentifier>//apple_ref/c/tdef/KSYAudioCodec</TokenIdentifier>
+			<Abstract type="html">音频编码器类型</Abstract>
 			<DeclaredIn>KSYTypeDef.h</DeclaredIn>
             
 			
@@ -14,9 +14,9 @@
 		
         
         <Token>
-            <TokenIdentifier>//apple_ref/c/econst/KSYStreamStateIdle</TokenIdentifier>
-            <Abstract type="html">初始化时状态为空闲</Abstract>
-            <Declaration>KSYStreamStateIdle</Declaration>
+            <TokenIdentifier>//apple_ref/c/econst/KSYAudioCodec_AAC_HE</TokenIdentifier>
+            <Abstract type="html">aac音频软件编码器 - AAC_HE</Abstract>
+            <Declaration>KSYAudioCodec_AAC_HE</Declaration>
             
             <DeclaredIn>KSYTypeDef.h</DeclaredIn>
             
@@ -24,9 +24,9 @@
         </Token>
         
         <Token>
-            <TokenIdentifier>//apple_ref/c/econst/KSYStreamStateConnecting</TokenIdentifier>
-            <Abstract type="html">连接中</Abstract>
-            <Declaration>KSYStreamStateConnecting</Declaration>
+            <TokenIdentifier>//apple_ref/c/econst/KSYAudioCodec_AAC</TokenIdentifier>
+            <Abstract type="html">aac音频软件编码器 - AAC_LC</Abstract>
+            <Declaration>KSYAudioCodec_AAC</Declaration>
             
             <DeclaredIn>KSYTypeDef.h</DeclaredIn>
             
@@ -34,9 +34,9 @@
         </Token>
         
         <Token>
-            <TokenIdentifier>//apple_ref/c/econst/KSYStreamStateConnected</TokenIdentifier>
-            <Abstract type="html">已连接</Abstract>
-            <Declaration>KSYStreamStateConnected</Declaration>
+            <TokenIdentifier>//apple_ref/c/econst/KSYAudioCodec_AT_AAC</TokenIdentifier>
+            <Abstract type="html">iOS自带的audiotoolbox音频编码器 - AAC_LC (CPU占用较低,但推荐码率:64kbps单声道,128kbps双声道)</Abstract>
+            <Declaration>KSYAudioCodec_AT_AAC</Declaration>
             
             <DeclaredIn>KSYTypeDef.h</DeclaredIn>
             
@@ -44,19 +44,9 @@
         </Token>
         
         <Token>
-            <TokenIdentifier>//apple_ref/c/econst/KSYStreamStateDisconnecting</TokenIdentifier>
-            <Abstract type="html">断开连接中</Abstract>
-            <Declaration>KSYStreamStateDisconnecting</Declaration>
-            
-            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
-            
-            <NodeRef refid="62"/>
-        </Token>
-        
-        <Token>
-            <TokenIdentifier>//apple_ref/c/econst/KSYStreamStateError</TokenIdentifier>
-            <Abstract type="html">推流出错</Abstract>
-            <Declaration>KSYStreamStateError</Declaration>
+            <TokenIdentifier>//apple_ref/c/econst/KSYAudioCodec_AAC_HE_V2</TokenIdentifier>
+            <Abstract type="html">aac软件编码器 - AACHEV2 (仅双声道音频可用;如果输入数据为单声道,则自动退化为 AAC_HE)</Abstract>
+            <Declaration>KSYAudioCodec_AAC_HE_V2</Declaration>
             
             <DeclaredIn>KSYTypeDef.h</DeclaredIn>
             

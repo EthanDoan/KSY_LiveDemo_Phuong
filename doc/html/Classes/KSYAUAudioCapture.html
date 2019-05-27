@@ -66,11 +66,19 @@
 		
 		<option value="//api/name/effectType">effectType</option>
 		
+		<option value="//api/name/effectTypeFlag">effectTypeFlag</option>
+		
 		<option value="//api/name/enableVoiceProcess">enableVoiceProcess</option>
+		
+		<option value="//api/name/isRunning">isRunning</option>
 		
 		<option value="//api/name/micVolume">micVolume</option>
 		
+		<option value="//api/name/noiseSuppressionLevel">noiseSuppressionLevel</option>
+		
 		<option value="//api/name/outputPts">outputPts</option>
+		
+		<option value="//api/name/pcmProcessingCallback">pcmProcessingCallback</option>
 		
 		<option value="//api/name/reverbType">reverbType</option>
 		
@@ -88,11 +96,19 @@
 	
 	<optgroup label="Instance Methods">
 		
+		<option value="//api/name/initWithSampleRate:">- initWithSampleRate:</option>
+		
 		<option value="//api/name/pauseCapture">- pauseCapture</option>
 		
 		<option value="//api/name/pauseWithMuteData">- pauseWithMuteData</option>
 		
 		<option value="//api/name/resumeCapture">- resumeCapture</option>
+		
+		<option value="//api/name/setDelayParamID:withInValue:">- setDelayParamID:withInValue:</option>
+		
+		<option value="//api/name/setPitchParamID:withInValue:">- setPitchParamID:withInValue:</option>
+		
+		<option value="//api/name/setReverbParamID:withInValue:">- setReverbParamID:withInValue:</option>
 		
 		<option value="//api/name/startCapture">- startCapture</option>
 		
@@ -136,13 +152,13 @@
 
 <ol>
 <li>基于 AudioUnit 实现的低延时音频采集模块</li>
-<li>能够对采集的语音添加混响音效 (目前提供了4种类型的混响场景)</li>
-<li>能够将采集的声音低延时播放,帮助主播选择音效 (又称"耳返")</li>
+<li>支持对采集的语音添加混响音效 (目前提供了4种类型的混响场景)</li>
+<li>支持将采集的声音低延时播放,帮助主播选择音效 (又称"耳返")</li>
+<li>支持对采集的音频进行降噪处理</li>
 <li>采集的声音通过回调函数提供出来</li>
+<li>当启用噪声抑制功能时,输出音频数据的采样率为16K(重采样得到,与采集的采样率无关)</li>
 </ol>
 
-
-<p>注意: 当使用本模块时, 需要禁用KSYGPUCamera中的音频采集</p>
 					</div>
 					
 					
@@ -158,6 +174,69 @@
 
 						<div class="task-list">
 							<div class="section-method">
+	<a name="//api/name/initWithSampleRate:" title="initWithSampleRate:"></a>
+	<h3 class="method-title"><code><a href="#//api/name/initWithSampleRate:">&ndash;&nbsp;initWithSampleRate:</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>指定采集音频的采样率</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>- (id)initWithSampleRate:(double)<em>sampleRate</em></code></div>
+
+		    
+			
+			<div class="method-subsection arguments-section parameters">
+				<h4 class="method-subtitle parameter-title">Parameters</h4>
+				<table class="argument-def parameter-def">
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>sampleRate</code></th>
+						<td><p>指定的采样率 , 默认为44100Hz</p></td>
+					</tr>
+				
+				</table>
+			</div>
+			
+
+			
+			<div class="method-subsection return">
+				<h4 class="method-subtitle parameter-title">Return Value</h4>
+				<p>采集设备实例</p>
+			</div>
+			
+
+			
+
+			
+			<div class="method-subsection discussion-section">
+				<h4 class="method-subtitle">Discussion</h4>
+				<div class="warning"><p><strong>Warning:</strong> 请尽量使用默认的44100, 使用其他的采样率可能导致混响和变声等功能异常</p></div>
+			</div>
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYAUAudioCapture.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
 	<a name="//api/name/startCapture" title="startCapture"></a>
 	<h3 class="method-title"><code><a href="#//api/name/startCapture">&ndash;&nbsp;startCapture</a></code>
 </h3>
@@ -460,6 +539,52 @@
 		</div>
 	</div>
 </div><div class="section-method">
+	<a name="//api/name/noiseSuppressionLevel" title="noiseSuppressionLevel"></a>
+	<h3 class="method-title"><code><a href="#//api/name/noiseSuppressionLevel">&nbsp;&nbsp;noiseSuppressionLevel</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>噪声抑制处理的等级(默认为KSYAudioNoiseSuppress_OFF)</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>@property (nonatomic, assign) KSYAudioNoiseSuppress noiseSuppressionLevel</code></div>
+
+		    
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection discussion-section">
+				<h4 class="method-subtitle">Discussion</h4>
+				<p>当启用噪声抑制处理后, 内部会进行输出音频数据的</p>
+			</div>
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYAUAudioCapture.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
 	<a name="//api/name/bForceAudioSessionCatogary" title="bForceAudioSessionCatogary"></a>
 	<h3 class="method-title"><code><a href="#//api/name/bForceAudioSessionCatogary">&nbsp;&nbsp;bForceAudioSessionCatogary</a></code>
 </h3>
@@ -722,7 +847,53 @@
 			
 			<div class="method-subsection discussion-section">
 				<h4 class="method-subtitle">Discussion</h4>
-				<p>sampleBuffer 为采集到的音频数据</p>
+				<p>sampleBuffer 为采集到的音频数据</p><p>与pcmProcessingCallback两者只能二选一, 设置 audioProcessingCallback 会清空<a href="#//api/name/pcmProcessingCallback">pcmProcessingCallback</a></p>
+			</div>
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYAUAudioCapture.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/pcmProcessingCallback" title="pcmProcessingCallback"></a>
+	<h3 class="method-title"><code><a href="#//api/name/pcmProcessingCallback">&nbsp;&nbsp;pcmProcessingCallback</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>采集数据输出回调函数</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>@property (nonatomic, copy) void ( ^ ) ( uint8_t **pData , int len , const AudioStreamBasicDescription *fmt , CMTime timeInfo ) pcmProcessingCallback</code></div>
+
+		    
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection discussion-section">
+				<h4 class="method-subtitle">Discussion</h4>
+				<p>pData 和 len 为采集数据和长度 (目前只支持单声道, 只有pData[0]为有效数据指针 )</p><p>与audioProcessingCallback两者只能二选一, 设置 pcmProcessingCallback 会清空<a href="#//api/name/audioProcessingCallback">audioProcessingCallback</a></p>
 			</div>
 			
 
@@ -831,6 +1002,293 @@
 			
 		</div>
 	</div>
+</div><div class="section-method">
+	<a name="//api/name/isRunning" title="isRunning"></a>
+	<h3 class="method-title"><code><a href="#//api/name/isRunning">&nbsp;&nbsp;isRunning</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>设备是否正在采集音频数据</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>@property (nonatomic, readonly) BOOL isRunning</code></div>
+
+		    
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYAUAudioCapture.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/effectTypeFlag" title="effectTypeFlag"></a>
+	<h3 class="method-title"><code><a href="#//api/name/effectTypeFlag">&nbsp;&nbsp;effectTypeFlag</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>变调组合类型</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>@property (nonatomic, assign) int effectTypeFlag</code></div>
+
+		    
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection discussion-section">
+				<h4 class="method-subtitle">Discussion</h4>
+				<p>目前提供了8种类型的变调场景, flag和变调组合类型的对应关系如下
+- 0 无组合
+- 1 reverb
+- 2 delay
+- 3 reverb+delay
+- 4 pitchShift
+- 5 reverb+pitchShift
+- 6 delay+pitchShift
+- 7 reverb+delay+pitchShift</p><div class="warning"><p><strong>Warning:</strong> 在设置effectTypeFlag时，请先将effectType设置成KSYAudioEffectType_COUSTOM模式，否则effectTypeFlag设置无法生效</p></div>
+			</div>
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYAUAudioCapture.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/setReverbParamID:withInValue:" title="setReverbParamID:withInValue:"></a>
+	<h3 class="method-title"><code><a href="#//api/name/setReverbParamID:withInValue:">&ndash;&nbsp;setReverbParamID:withInValue:</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>自定义混响参数接口</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>- (void)setReverbParamID:(AudioUnitParameterID)<em>inID</em> withInValue:(AudioUnitParameterValue)<em>inValue</em></code></div>
+
+		    
+			
+			<div class="method-subsection arguments-section parameters">
+				<h4 class="method-subtitle parameter-title">Parameters</h4>
+				<table class="argument-def parameter-def">
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>inID</code></th>
+						<td><p>混响参数(0~6), 对应关系如下
+- 0 kReverb2Param_DryWetMix
+- 1 kReverb2Param_Gain
+- 2 kReverb2Param_MinDelayTime
+- 3 kReverb2Param_MaxDelayTime
+- 4 kReverb2Param_DecayTimeAt0Hz
+- 5 kReverb2Param_DecayTimeAtNyquist
+- 6 kReverb2Param_RandomizeReflections
+*</p></td>
+					</tr>
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>inValue</code></th>
+						<td><p>混响参数对应的值</p></td>
+					</tr>
+				
+				</table>
+			</div>
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYAUAudioCapture.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/setPitchParamID:withInValue:" title="setPitchParamID:withInValue:"></a>
+	<h3 class="method-title"><code><a href="#//api/name/setPitchParamID:withInValue:">&ndash;&nbsp;setPitchParamID:withInValue:</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>自定义pitchShift参数接口</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>- (void)setPitchParamID:(AudioUnitParameterID)<em>inID</em> withInValue:(AudioUnitParameterValue)<em>inValue</em></code></div>
+
+		    
+			
+			<div class="method-subsection arguments-section parameters">
+				<h4 class="method-subtitle parameter-title">Parameters</h4>
+				<table class="argument-def parameter-def">
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>inID</code></th>
+						<td><p>pitchShift参数,对应关系如下
+- 0 kNewTimePitchParam_Rate
+- 1 kNewTimePitchParam_Pitch (SDK中变调主要是调这个参数)
+- 4 kNewTimePitchParam_Overlap
+- 6 kNewTimePitchParam_EnablePeakLocking
+*</p></td>
+					</tr>
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>inValue</code></th>
+						<td><p>pitchShift参数对应的值</p></td>
+					</tr>
+				
+				</table>
+			</div>
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYAUAudioCapture.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
+</div><div class="section-method">
+	<a name="//api/name/setDelayParamID:withInValue:" title="setDelayParamID:withInValue:"></a>
+	<h3 class="method-title"><code><a href="#//api/name/setDelayParamID:withInValue:">&ndash;&nbsp;setDelayParamID:withInValue:</a></code>
+</h3>
+
+	<div class="method-info">
+		<div class="pointy-thing"></div>
+
+		<div class="method-info-container">
+			
+			
+			<div class="method-subsection brief-description">
+				<p>自定义delay参数接口</p>
+			</div>
+			
+		    
+
+			<div class="method-subsection method-declaration"><code>- (void)setDelayParamID:(AudioUnitParameterID)<em>inID</em> withInValue:(AudioUnitParameterValue)<em>inValue</em></code></div>
+
+		    
+			
+			<div class="method-subsection arguments-section parameters">
+				<h4 class="method-subtitle parameter-title">Parameters</h4>
+				<table class="argument-def parameter-def">
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>inID</code></th>
+						<td><p>delay参数(0~3),对应关系如下
+- 0 kDelayParam_WetDryMix
+- 1 kDelayParam_DelayTime
+- 2 kDelayParam_Feedback
+- 3 kDelayParam_LopassCutoff
+*</p></td>
+					</tr>
+				
+					<tr>
+						<th scope="row" class="argument-name"><code>inValue</code></th>
+						<td><p>delay参数对应的值</p></td>
+					</tr>
+				
+				</table>
+			</div>
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+			<div class="method-subsection declared-in-section">
+				<h4 class="method-subtitle">Declared In</h4>
+				<p><code class="declared-in-ref">KSYAUAudioCapture.h</code></p>
+			</div>
+			
+			
+		</div>
+	</div>
 </div>
 						</div>
 						
@@ -846,7 +1304,7 @@
 				<footer>
 					<div class="footer-copyright">
 						
-						<p class="copyright">Copyright &copy; 2017 Kingsoft. All rights reserved. Updated: 2017-05-31</p>
+						<p class="copyright">Copyright &copy; 2018 Kingsoft. All rights reserved. </p>
 						
 						
 						<p class="generator">Generated by <a href="http://appledoc.gentlebytes.com">appledoc 2.2.1 (build 1334)</a>.</p>

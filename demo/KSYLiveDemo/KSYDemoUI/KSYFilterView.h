@@ -23,7 +23,7 @@
 @property (nonatomic, readonly) KSYNameSlider * filterParam2; // 参数2
 @property (nonatomic, readonly) KSYNameSlider * filterParam3; // 参数3
 
-// 选择滤镜/Select the filter
+// 选择滤镜
 @property (nonatomic, readonly) GPUImageOutput<GPUImageInput>* curFilter;
 // 滤镜组合
 @property (nonatomic, readonly) UISegmentedControl  * filterGroupType;

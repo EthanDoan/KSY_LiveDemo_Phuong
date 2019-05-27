@@ -9,11 +9,12 @@
 #import "KSYUIVC.h"
 #import <mach/mach.h>
 #import <libksygpulive/KSYReachability.h>
+#import <libksygpulive/KSYWeakProxy.h>
 #import "KSYUIView.h"
 
 @interface KSYUIVC() {
     KSYReachability *_reach;
-    KSYNetworkStatus   _preStatue;
+    KSYNetworkStatus _preStatue;
 }
 
 @end
@@ -29,8 +30,9 @@
 
 - (void) addObservers {
     // statistics update every seconds
-    _timer =  [NSTimer scheduledTimerWithTimeInterval:1.0
-                                               target:self
+    KSYWeakProxy *proxy = [KSYWeakProxy proxyWithTarget:self];
+    self.timer =  [NSTimer scheduledTimerWithTimeInterval:1.0
+                                               target:proxy
                                              selector:@selector(onTimer:)
                                              userInfo:nil
                                               repeats:YES];
@@ -51,10 +53,10 @@
     _preStatue = currentStatus;
     switch (currentStatus) {
         case KSYNotReachable:
-            _networkStatus = @"no network";//无网络
+            _networkStatus = @"无网络";
             break;
         case KSYReachableViaWWAN:
-            _networkStatus = @"mobile network";//移动网络
+            _networkStatus = @"移动网络";
             break;
         case KSYReachableViaWiFi:
             _networkStatus = @"WIFI";
@@ -99,6 +101,25 @@
     }
     _reach = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (CGRect) calcPreviewRect:(CGFloat) ratio {
+    CGRect previewRect = self.view.frame;
+    CGSize sz = previewRect.size;
+    CGSize screenSz = [[UIScreen mainScreen] bounds].size;
+    CGFloat hgt = MAX(screenSz.height, screenSz.width);
+    if (!FLOAT_EQ(hgt, 812)){
+        return previewRect; // not iphoneX
+    }
+    if (sz.width < sz.height ) { // 竖屏
+        previewRect.size.height = sz.width*ratio;
+        previewRect.origin.y += (sz.height -previewRect.size.height)/2;
+    }
+    else { // 横屏
+        previewRect.size.width = sz.height*ratio;
+        previewRect.origin.x += (sz.width -previewRect.size.width)/2;
+    }
+    return previewRect;
 }
 
 - (void) layoutUI {
@@ -179,7 +200,6 @@
         return -1;
     }
     
-    task_basic_info_t      basic_info;
     thread_array_t         thread_list;
     mach_msg_type_number_t thread_count;
     
@@ -187,18 +207,12 @@
     mach_msg_type_number_t thread_info_count;
     
     thread_basic_info_t basic_info_th;
-    uint32_t stat_thread = 0; // Mach threads
-    
-    basic_info = (task_basic_info_t)tinfo;
     
     // get threads in the task
     kr = task_threads(mach_task_self(), &thread_list, &thread_count);
     if (kr != KERN_SUCCESS) {
         return -1;
     }
-    if (thread_count > 0)
-        stat_thread += thread_count;
-    
     long tot_sec = 0;
     long tot_usec = 0;
     float tot_cpu = 0;
@@ -242,6 +256,18 @@
     return taskInfo.resident_size / 1024.0 / 1024.0;
 }
 
++ (int)getCurrentBatteryLevel{
+    //拿到当前设备
+    UIDevice * device = [UIDevice currentDevice];
+    //是否允许监测电池
+    //要想获取电池电量信息和监控电池电量 必须允许
+    device.batteryMonitoringEnabled = true;
+    float level = device.batteryLevel;
+    //换算为百分比
+    int result = level * 100;
+    return result;
+}
+
 #pragma mark - save Image
 // 将UIImage 保存到path对应的文件
 + (void)saveImage: (UIImage *)image
@@ -257,18 +283,18 @@
     
     if (error == nil) {
         UIAlertView *toast = [[UIAlertView alloc] initWithTitle:@"O(∩_∩)O~~"
-                                                        message:@"Image saved to phone album"//图像已保存至手机相册
+                                                        message:@"图像已保存至手机相册"
                                                        delegate:nil
-                                              cancelButtonTitle:@"determine"//确定
+                                              cancelButtonTitle:@"确定"
                                               otherButtonTitles:nil, nil];
         [toast show];
         
     }else{
         
         UIAlertView *toast = [[UIAlertView alloc] initWithTitle:@"￣へ￣"
-                                                        message:@"Image saved phone album failed！"//图像保存手机相册失败
+                                                        message:@"图像保存手机相册失败！"
                                                        delegate:nil
-                                              cancelButtonTitle:@"determine"//确定
+                                              cancelButtonTitle:@"确定"
                                               otherButtonTitles:nil, nil];
         [toast show];
     }

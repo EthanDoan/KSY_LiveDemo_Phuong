@@ -1,48 +1,116 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Tokens version="1.0">
-	<File path="Constants/KSYBWEstimateMode.html">
+	<File path="Classes/KSYSpecialEffects.html">
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/c/tdef/KSYBWEstimateMode</TokenIdentifier>
-			<Abstract type="html">网络自适应模式类型
-  </Abstract>
-			<DeclaredIn>KSYTypeDef.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/cl/KSYSpecialEffects</TokenIdentifier>
+			<Abstract type="html">金山云特效滤镜</Abstract>
+			<DeclaredIn>KSYSpecialEffects.h</DeclaredIn>
             
 			
 			<NodeRef refid="47"/>
 		</Token>
 		
 		
-        
-        <Token>
-            <TokenIdentifier>//apple_ref/c/econst/KSYBWEstMode_Default</TokenIdentifier>
-            <Abstract type="html">默认模式 (综合模式,比较平稳)</Abstract>
-            <Declaration>KSYBWEstMode_Default</Declaration>
-            
-            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
-            
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/clm/KSYSpecialEffects/showVersion</TokenIdentifier>
+			<Abstract type="html">show version of this filter</Abstract>
+			<DeclaredIn>KSYSpecialEffects.h</DeclaredIn>
+			
+			<Declaration>+ (void)showVersion</Declaration>
+			
+			
+			<Anchor>//api/name/showVersion</Anchor>
             <NodeRef refid="47"/>
-        </Token>
-        
-        <Token>
-            <TokenIdentifier>//apple_ref/c/econst/KSYBWEstMode_Negtive</TokenIdentifier>
-            <Abstract type="html">流畅优先模式(消极上调, 极速下调)</Abstract>
-            <Declaration>KSYBWEstMode_Negtive</Declaration>
-            
-            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
-            
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYSpecialEffects/initWithUIImage:</TokenIdentifier>
+			<Abstract type="html">初始化并指定特效素材</Abstract>
+			<DeclaredIn>KSYSpecialEffects.h</DeclaredIn>
+			
+			<Declaration>- (id)initWithUIImage:(UIImage *)image</Declaration>
+			<Parameters>
+				<Parameter>
+					<Name>image</Name>
+					<Abstract type="html">特效素材</Abstract>
+				</Parameter>
+			</Parameters>
+			<ReturnValue><Abstract type="html">构造的滤镜</Abstract></ReturnValue>
+			<Anchor>//api/name/initWithUIImage:</Anchor>
             <NodeRef refid="47"/>
-        </Token>
-        
-        <Token>
-            <TokenIdentifier>//apple_ref/c/econst/KSYBWEstMode_Disable</TokenIdentifier>
-            <Abstract type="html">禁用网络自适应网络调整</Abstract>
-            <Declaration>KSYBWEstMode_Disable</Declaration>
-            
-            <DeclaredIn>KSYTypeDef.h</DeclaredIn>
-            
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYSpecialEffects/initWithImageName:</TokenIdentifier>
+			<Abstract type="html">初始化并指定特效素材</Abstract>
+			<DeclaredIn>KSYSpecialEffects.h</DeclaredIn>
+			
+			<Declaration>- (id)initWithImageName:(NSString *)name</Declaration>
+			<Parameters>
+				<Parameter>
+					<Name>name</Name>
+					<Abstract type="html">特效素材的文件名</Abstract>
+				</Parameter>
+			</Parameters>
+			<ReturnValue><Abstract type="html">构造的滤镜</Abstract></ReturnValue>
+			<Anchor>//api/name/initWithImageName:</Anchor>
             <NodeRef refid="47"/>
-        </Token>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYSpecialEffects/setSpecialEffectsUIImage:</TokenIdentifier>
+			<Abstract type="html">指定特效素材</Abstract>
+			<DeclaredIn>KSYSpecialEffects.h</DeclaredIn>
+			
+			<Declaration>- (void)setSpecialEffectsUIImage:(UIImage *)image</Declaration>
+			<Parameters>
+				<Parameter>
+					<Name>image</Name>
+					<Abstract type="html">特效素材</Abstract>
+				</Parameter>
+			</Parameters>
+			
+			<Anchor>//api/name/setSpecialEffectsUIImage:</Anchor>
+            <NodeRef refid="47"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYSpecialEffects/setIntensity:</TokenIdentifier>
+			<Abstract type="html">特效参数</Abstract>
+			<DeclaredIn>KSYSpecialEffects.h</DeclaredIn>
+			
+			<Declaration>@property (readwrite, nonatomic) CGFloat intensity</Declaration>
+			
+			
+			<Anchor>//api/name/intensity</Anchor>
+            <NodeRef refid="47"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYSpecialEffects/intensity</TokenIdentifier>
+			<Abstract type="html">特效参数</Abstract>
+			<DeclaredIn>KSYSpecialEffects.h</DeclaredIn>
+			
+			<Declaration>@property (readwrite, nonatomic) CGFloat intensity</Declaration>
+			
+			
+			<Anchor>//api/name/intensity</Anchor>
+            <NodeRef refid="47"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYSpecialEffects/intensity</TokenIdentifier>
+			<Abstract type="html">特效参数</Abstract>
+			<DeclaredIn>KSYSpecialEffects.h</DeclaredIn>
+			
+			<Declaration>@property (readwrite, nonatomic) CGFloat intensity</Declaration>
+			
+			
+			<Anchor>//api/name/intensity</Anchor>
+            <NodeRef refid="47"/>
+		</Token>
+		
         
         
 	</File>

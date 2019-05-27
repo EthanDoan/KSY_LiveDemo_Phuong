@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Tokens version="1.0">
-	<File path="Classes/KSYMediaInfo.html">
+	<File path="Classes/KSYGPUPipStreamerKit.html">
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/cl/KSYMediaInfo</TokenIdentifier>
-			<Abstract type="html">媒体信息</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/cl/KSYGPUPipStreamerKit</TokenIdentifier>
+			<Abstract type="html"></Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
             
 			
 			<NodeRef refid="29"/>
@@ -13,182 +13,418 @@
 		
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYMediaInfo/setType:</TokenIdentifier>
-			<Abstract type="html">封装格式，具体类型为MEDIAINFOMUXTYPE</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/setPipTrack:</TokenIdentifier>
+			<Abstract type="html">画中画通道</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) MEDIAINFO_MUX_TYPE type</Declaration>
+			<Declaration>@property (nonatomic, readonly) int pipTrack</Declaration>
 			
 			
-			<Anchor>//api/name/type</Anchor>
+			<Anchor>//api/name/pipTrack</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYMediaInfo/type</TokenIdentifier>
-			<Abstract type="html">封装格式，具体类型为MEDIAINFOMUXTYPE</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/pipTrack</TokenIdentifier>
+			<Abstract type="html">画中画通道</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) MEDIAINFO_MUX_TYPE type</Declaration>
+			<Declaration>@property (nonatomic, readonly) int pipTrack</Declaration>
 			
 			
-			<Anchor>//api/name/type</Anchor>
+			<Anchor>//api/name/pipTrack</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instp/KSYMediaInfo/type</TokenIdentifier>
-			<Abstract type="html">封装格式，具体类型为MEDIAINFOMUXTYPE</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYGPUPipStreamerKit/pipTrack</TokenIdentifier>
+			<Abstract type="html">画中画通道</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) MEDIAINFO_MUX_TYPE type</Declaration>
+			<Declaration>@property (nonatomic, readonly) int pipTrack</Declaration>
 			
 			
-			<Anchor>//api/name/type</Anchor>
+			<Anchor>//api/name/pipTrack</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYMediaInfo/setBitrate:</TokenIdentifier>
-			<Abstract type="html">码率</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/setBgPicLayer:</TokenIdentifier>
+			<Abstract type="html">背景图片图层</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic, assign) int64_t bitrate</Declaration>
+			<Declaration>@property (nonatomic, readonly) NSInteger bgPicLayer</Declaration>
 			
 			
-			<Anchor>//api/name/bitrate</Anchor>
+			<Anchor>//api/name/bgPicLayer</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYMediaInfo/bitrate</TokenIdentifier>
-			<Abstract type="html">码率</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/bgPicLayer</TokenIdentifier>
+			<Abstract type="html">背景图片图层</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic, assign) int64_t bitrate</Declaration>
+			<Declaration>@property (nonatomic, readonly) NSInteger bgPicLayer</Declaration>
 			
 			
-			<Anchor>//api/name/bitrate</Anchor>
+			<Anchor>//api/name/bgPicLayer</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instp/KSYMediaInfo/bitrate</TokenIdentifier>
-			<Abstract type="html">码率</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYGPUPipStreamerKit/bgPicLayer</TokenIdentifier>
+			<Abstract type="html">背景图片图层</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic, assign) int64_t bitrate</Declaration>
+			<Declaration>@property (nonatomic, readonly) NSInteger bgPicLayer</Declaration>
 			
 			
-			<Anchor>//api/name/bitrate</Anchor>
+			<Anchor>//api/name/bgPicLayer</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYMediaInfo/setDuration:</TokenIdentifier>
-			<Abstract type="html">视频总时长，单位是秒</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/setPipLayer:</TokenIdentifier>
+			<Abstract type="html">画中画图层</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic, assign) NSTimeInterval duration</Declaration>
+			<Declaration>@property (nonatomic, readonly) NSInteger pipLayer</Declaration>
 			
 			
-			<Anchor>//api/name/duration</Anchor>
+			<Anchor>//api/name/pipLayer</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYMediaInfo/duration</TokenIdentifier>
-			<Abstract type="html">视频总时长，单位是秒</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/pipLayer</TokenIdentifier>
+			<Abstract type="html">画中画图层</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic, assign) NSTimeInterval duration</Declaration>
+			<Declaration>@property (nonatomic, readonly) NSInteger pipLayer</Declaration>
 			
 			
-			<Anchor>//api/name/duration</Anchor>
+			<Anchor>//api/name/pipLayer</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instp/KSYMediaInfo/duration</TokenIdentifier>
-			<Abstract type="html">视频总时长，单位是秒</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYGPUPipStreamerKit/pipLayer</TokenIdentifier>
+			<Abstract type="html">画中画图层</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic, assign) NSTimeInterval duration</Declaration>
+			<Declaration>@property (nonatomic, readonly) NSInteger pipLayer</Declaration>
 			
 			
-			<Anchor>//api/name/duration</Anchor>
+			<Anchor>//api/name/pipLayer</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYMediaInfo/setVideos:</TokenIdentifier>
-			<Abstract type="html">所有视频流信息，具体对象类型为KSYVideoInfo</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/startPipWithPlayerUrl:bgPic:</TokenIdentifier>
+			<Abstract type="html">开启画中画
+@param playerUrl:播放视频的url
+@param bgUrl:背景图片的url</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) NSMutableArray *videos</Declaration>
+			<Declaration>- (void)startPipWithPlayerUrl:(NSURL *_Nullable)playerUrl bgPic:(NSURL *_Nullable)bgUrl</Declaration>
 			
 			
-			<Anchor>//api/name/videos</Anchor>
+			<Anchor>//api/name/startPipWithPlayerUrl:bgPic:</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYMediaInfo/videos</TokenIdentifier>
-			<Abstract type="html">所有视频流信息，具体对象类型为KSYVideoInfo</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/stopPip</TokenIdentifier>
+			<Abstract type="html">停止画中画
+*</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) NSMutableArray *videos</Declaration>
+			<Declaration>- (void)stopPip</Declaration>
 			
 			
-			<Anchor>//api/name/videos</Anchor>
+			<Anchor>//api/name/stopPip</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instp/KSYMediaInfo/videos</TokenIdentifier>
-			<Abstract type="html">所有视频流信息，具体对象类型为KSYVideoInfo</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/setPlayer:</TokenIdentifier>
+			<Abstract type="html">背景播放器</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) NSMutableArray *videos</Declaration>
+			<Declaration>@property (nonatomic, readonly) KSYMoviePlayerController *player</Declaration>
 			
 			
-			<Anchor>//api/name/videos</Anchor>
+			<Anchor>//api/name/player</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYMediaInfo/setAudios:</TokenIdentifier>
-			<Abstract type="html">所有音频流信息，具体对象类型为KSYAudioInfo</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/player</TokenIdentifier>
+			<Abstract type="html">背景播放器</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) NSMutableArray *audios</Declaration>
+			<Declaration>@property (nonatomic, readonly) KSYMoviePlayerController *player</Declaration>
 			
 			
-			<Anchor>//api/name/audios</Anchor>
+			<Anchor>//api/name/player</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instm/KSYMediaInfo/audios</TokenIdentifier>
-			<Abstract type="html">所有音频流信息，具体对象类型为KSYAudioInfo</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYGPUPipStreamerKit/player</TokenIdentifier>
+			<Abstract type="html">背景播放器</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) NSMutableArray *audios</Declaration>
+			<Declaration>@property (nonatomic, readonly) KSYMoviePlayerController *player</Declaration>
 			
 			
-			<Anchor>//api/name/audios</Anchor>
+			<Anchor>//api/name/player</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		
 		<Token>
-			<TokenIdentifier>//apple_ref/occ/instp/KSYMediaInfo/audios</TokenIdentifier>
-			<Abstract type="html">所有音频流信息，具体对象类型为KSYAudioInfo</Abstract>
-			<DeclaredIn>KSYMediaInfo.h</DeclaredIn>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/setBgPic:</TokenIdentifier>
+			<Abstract type="html">背景图片</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
 			
-			<Declaration>@property (nonatomic) NSMutableArray *audios</Declaration>
+			<Declaration>@property (nonatomic, strong) GPUImagePicture *bgPic</Declaration>
 			
 			
-			<Anchor>//api/name/audios</Anchor>
+			<Anchor>//api/name/bgPic</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/bgPic</TokenIdentifier>
+			<Abstract type="html">背景图片</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, strong) GPUImagePicture *bgPic</Declaration>
+			
+			
+			<Anchor>//api/name/bgPic</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYGPUPipStreamerKit/bgPic</TokenIdentifier>
+			<Abstract type="html">背景图片</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, strong) GPUImagePicture *bgPic</Declaration>
+			
+			
+			<Anchor>//api/name/bgPic</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/setYuvInput:</TokenIdentifier>
+			<Abstract type="html">画中画图像输入</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readonly) KSYGPUPicInput *yuvInput</Declaration>
+			
+			
+			<Anchor>//api/name/yuvInput</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/yuvInput</TokenIdentifier>
+			<Abstract type="html">画中画图像输入</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readonly) KSYGPUPicInput *yuvInput</Declaration>
+			
+			
+			<Anchor>//api/name/yuvInput</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYGPUPipStreamerKit/yuvInput</TokenIdentifier>
+			<Abstract type="html">画中画图像输入</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readonly) KSYGPUPicInput *yuvInput</Declaration>
+			
+			
+			<Anchor>//api/name/yuvInput</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/setBgPicRect:</TokenIdentifier>
+			<Abstract type="html">背景图片的位置和大小</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readwrite) CGRect bgPicRect</Declaration>
+			
+			
+			<Anchor>//api/name/bgPicRect</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/bgPicRect</TokenIdentifier>
+			<Abstract type="html">背景图片的位置和大小</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readwrite) CGRect bgPicRect</Declaration>
+			
+			
+			<Anchor>//api/name/bgPicRect</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYGPUPipStreamerKit/bgPicRect</TokenIdentifier>
+			<Abstract type="html">背景图片的位置和大小</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readwrite) CGRect bgPicRect</Declaration>
+			
+			
+			<Anchor>//api/name/bgPicRect</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/setPipRect:</TokenIdentifier>
+			<Abstract type="html">画中画的位置和大小</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readwrite) CGRect pipRect</Declaration>
+			
+			
+			<Anchor>//api/name/pipRect</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/pipRect</TokenIdentifier>
+			<Abstract type="html">画中画的位置和大小</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readwrite) CGRect pipRect</Declaration>
+			
+			
+			<Anchor>//api/name/pipRect</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYGPUPipStreamerKit/pipRect</TokenIdentifier>
+			<Abstract type="html">画中画的位置和大小</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readwrite) CGRect pipRect</Declaration>
+			
+			
+			<Anchor>//api/name/pipRect</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/setCameraRect:</TokenIdentifier>
+			<Abstract type="html">相机的位置和大小</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readwrite) CGRect cameraRect</Declaration>
+			
+			
+			<Anchor>//api/name/cameraRect</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/cameraRect</TokenIdentifier>
+			<Abstract type="html">相机的位置和大小</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readwrite) CGRect cameraRect</Declaration>
+			
+			
+			<Anchor>//api/name/cameraRect</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYGPUPipStreamerKit/cameraRect</TokenIdentifier>
+			<Abstract type="html">相机的位置和大小</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readwrite) CGRect cameraRect</Declaration>
+			
+			
+			<Anchor>//api/name/cameraRect</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/getPipStateName:</TokenIdentifier>
+			<Abstract type="html">获取状态对应的字符串</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>- (NSString *_Nonnull)getPipStateName:(MPMoviePlaybackState)stat</Declaration>
+			<Parameters>
+				<Parameter>
+					<Name>stat</Name>
+					<Abstract type="html">状态</Abstract>
+				</Parameter>
+			</Parameters>
+			
+			<Anchor>//api/name/getPipStateName:</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/getCurPipStateName</TokenIdentifier>
+			<Abstract type="html">获取当前状态对应的字符串</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>- (NSString *_Nonnull)getCurPipStateName</Declaration>
+			
+			
+			<Anchor>//api/name/getCurPipStateName</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/setPipState:</TokenIdentifier>
+			<Abstract type="html">播放状态</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readonly) MPMoviePlaybackState PipState</Declaration>
+			
+			
+			<Anchor>//api/name/PipState</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instm/KSYGPUPipStreamerKit/PipState</TokenIdentifier>
+			<Abstract type="html">播放状态</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readonly) MPMoviePlaybackState PipState</Declaration>
+			
+			
+			<Anchor>//api/name/PipState</Anchor>
+            <NodeRef refid="29"/>
+		</Token>
+		
+		<Token>
+			<TokenIdentifier>//apple_ref/occ/instp/KSYGPUPipStreamerKit/PipState</TokenIdentifier>
+			<Abstract type="html">播放状态</Abstract>
+			<DeclaredIn>KSYGPUPipStreamerKit.h</DeclaredIn>
+			
+			<Declaration>@property (nonatomic, readonly) MPMoviePlaybackState PipState</Declaration>
+			
+			
+			<Anchor>//api/name/PipState</Anchor>
             <NodeRef refid="29"/>
 		</Token>
 		

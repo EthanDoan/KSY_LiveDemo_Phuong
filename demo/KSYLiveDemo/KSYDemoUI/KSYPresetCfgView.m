@@ -19,33 +19,32 @@
 @property UILabel* demoLable;
 @end
 
-#define FLOAT_EQ( f0, f1 ) ( (f0 - f1 < 0.001)&& (f0 - f1 > -0.001) )
-
 @implementation KSYPresetCfgView
 - (id) init {
     self = [super init];
     self.backgroundColor = [UIColor whiteColor];
     // hostURL = rtmpSrv + streamName(随机数,避免多个demo推向同一个流
-    NSString *rtmpSrv = @"rtmp://test.uplive.ks-cdn.com/live";
+    NSString *rtmpSrv = @"rtmp://mobile.kscvbu.cn/live";
     NSString *devCode = [ [KSYUIView getUuid] substringToIndex:3];
     NSString *url     = [  NSString stringWithFormat:@"%@/%@", rtmpSrv, devCode];
     _hostUrlUI = [self addTextField:url ];
     _doneBtn =  [self addButton:@"ok"];
-    _btn0 =  [self addButton:@"Start live"];//开始直播
-    _btn1 =  [self addButton:@"PiP live"];//画中画直播
+    _btn0 =  [self addButton:@"开始直播"];
+    _btn1 =  [self addButton:@"画中画直播"];
 #ifdef KSYSTREAMER_DEMO
     _btn2 =  [self addButton:@"forTest"];
 #endif
-    _btn3 =  [self addButton:@"Bg-music live"];//背景音乐直播
-    _btn4 =  [self addButton:@"Return"];//返回
-    _btn5 = [self addButton:@"Suspension window live"];//悬浮窗直播
+    _btn3 =  [self addButton:@"背景音乐直播"];
+    _btn4 =  [self addButton:@"返回"];
+    _btn5 = [self addButton:@"悬浮窗直播"];
     
-    _lblCameraPosUI = [self addLable:@"camera"];//摄像头
-    _cameraPosUI    = [self addSegCtrlWithItems:@[@"front",@"post"]];//前置",@"后置
-    _lblGpuPixFmtUI = [self addLable:@"Pixel format"];//像素格式
-    _gpuPixFmtUI  = [self addSegCtrlWithItems:@[@"rgba",@"nv12"]];
-    _lblProfileUI = [self addLable:@"Configuration"];//配置
-    _profileUI = [self addSegCtrlWithItems:@[@"default level",@"customize"]];//预设等级, 自定义
+    _lblCameraPosUI = [self addLable:@"摄像头"];
+    _cameraPosUI    = [self addSegCtrlWithItems:@[@"前置",@"后置"]];
+    _lblGpuPixFmtUI = [self addLable:@"像素格式"];
+    _gpuPixFmtUI  = [self addSegCtrlWithItems:@[@"rgba",@"nv12", @"I420"]];
+    _gpuPixFmtUI.selectedSegmentIndex = 2;
+    _lblProfileUI = [self addLable:@"配置"];
+    _profileUI = [self addSegCtrlWithItems:@[@"预设等级",@"自定义"]];
     _profileUI.selectedSegmentIndex = 0;
     _profileNames = [NSArray arrayWithObjects:@"360p_auto",@"360p_1",@"360p_2",@"360p_3",
                                               @"540p_auto",@"540p_1",@"540p_2",@"540p_3",
@@ -53,8 +52,8 @@
     
     CGRect screenRect = [[UIScreen mainScreen]bounds];
     CGFloat ratio = screenRect.size.width / screenRect.size.height;
-    _lblResolutionUI = [self addLable:@"collect resolution"];//采集分辨率
-    _lblStreamResoUI = [self addLable:@"push flow res"];//推流分辨率
+    _lblResolutionUI = [self addLable:@"采集分辨率"];
+    _lblStreamResoUI = [self addLable:@"推流分辨率"];
     _resolutionUI = [self addSegCtrlWithItems:@[@"360p",@"540p",@"720p", @"480p"]];
     _streamResoUI = [self addSegCtrlWithItems:@[@"360p",@"540p",@"720p", @"480p", @"400"]];
     _resolutionUI.selectedSegmentIndex = 2;
@@ -67,20 +66,20 @@
         [_streamResoUI setWidth:0.5 forSegmentAtIndex: 3];
     }
 
-    _frameRateUI  = [self addSliderName:@"video fps" From:1.0 To:30.0 Init:15.0];//视频帧率
-    _lblVideoCodecUI = [self addLable:@"video encoder"];//视频编码器
-    _videoCodecUI = [self addSegCtrlWithItems:@[@"Auto",@"软264",@"硬264",@"软265"]];//自动
-    _lblAudioCodecUI = [self addLable:@"Audio encoder"];//音频编码器
+    _frameRateUI  = [self addSliderName:@"视频帧率fps" From:1.0 To:30.0 Init:15.0];
+    _lblVideoCodecUI = [self addLable:@"视频编码器"];
+    _videoCodecUI = [self addSegCtrlWithItems:@[@"自动",@"软264",@"硬264",@"软265", @"硬265"]];
+    _lblAudioCodecUI = [self addLable:@"音频编码器"];
     _audioCodecUI = [self addSegCtrlWithItems:@[@"aache",@"aaclc",@"ATaaclc", @"aachev2"]];
-    _videoKbpsUI  = [self addSliderName:@"video bitrate kbps" From:100.0 To:1600.0 Init:800.0];//视频码率
-    _lblAudioKbpsUI= [self addLable:@"audio bitrate kbps"];//音频码率
+    _videoKbpsUI  = [self addSliderName:@"视频码率kbps" From:100.0 To:1600.0 Init:800.0];
+    _lblAudioKbpsUI= [self addLable:@"音频码率kbps"];
     _audioKbpsUI  = [self addSegCtrlWithItems:@[@"12",@"24",@"32", @"48", @"64", @"128"]];
     _audioKbpsUI.selectedSegmentIndex = 2;
-    _lblBwEstMode = [self addLable:@"bandwidth estimation mode"];//带宽估计模式
-    _bwEstModeUI = [self addSegCtrlWithItems:@[@"default", @"smooth", @"shutdown"]];//@"默认", @"流畅", @"关闭"
-    _lblWithMessage  = [self addLable:@"message channel"];//消息通道
-    _withMessageUI = [self addSegCtrlWithItems:@[@"turn on", @"shutdown"]];//打开", @"关闭
-    _demoLable    = [self addLable:@"select-demo-start"];//选择demo开始
+    _lblBwEstMode = [self addLable:@"带宽估计模式"];
+    _bwEstModeUI = [self addSegCtrlWithItems:@[@"默认", @"流畅", @"关闭"]];
+    _lblWithMessage  = [self addLable:@"消息通道"];
+    _withMessageUI = [self addSegCtrlWithItems:@[@"打开", @"关闭"]];
+    _demoLable    = [self addLable:@"选择demo开始"];
     _demoLable.textAlignment = NSTextAlignmentCenter;
     
     _profilePicker = [[UIPickerView alloc] init];
@@ -181,16 +180,16 @@ numberOfRowsInComponent:(NSInteger)component {
     _withMessageUI.hidden = YES;
     
     NSString* title = _btn0.currentTitle;
-    _bRecord = [ title isEqualToString:@"start recording"];//开始录制
+    _bRecord = [ title isEqualToString:@"开始录制"];
 
     if (idx == 0){
         _profilePicker.hidden = NO;
         [self getStreamerProfile:_curProfileIdx];
         if (_bRecord){
-            [_btn0 setTitle: @"start recording" forState: UIControlStateNormal];//开始录制
+            [_btn0 setTitle: @"开始录制" forState: UIControlStateNormal];
         }
         else{
-            [_btn0 setTitle: @"preset configuration live" forState: UIControlStateNormal];//预设配置直播
+            [_btn0 setTitle: @"预设配置直播" forState: UIControlStateNormal];
         }
     }else{
         _lblResolutionUI.hidden = NO;
@@ -210,10 +209,10 @@ numberOfRowsInComponent:(NSInteger)component {
         _lblWithMessage.hidden = NO;
         _withMessageUI.hidden = NO;
         if (_bRecord){
-            [_btn0 setTitle: @"start recording" forState: UIControlStateNormal];//开始录制
+            [_btn0 setTitle: @"开始录制" forState: UIControlStateNormal];
         }
         else{
-            [_btn0 setTitle: @"custom configuration live" forState: UIControlStateNormal];//自定义配置直播
+            [_btn0 setTitle: @"自定义配置直播" forState: UIControlStateNormal];
         }
     }
     [self layoutUI];
@@ -229,7 +228,7 @@ numberOfRowsInComponent:(NSInteger)component {
             _videoCodecUI.selectedSegmentIndex = 0;
             _videoKbpsUI.slider.value = 512;
             _audioCodecUI.selectedSegmentIndex = 2;
-            _audioKbpsUI.selectedSegmentIndex = 3;
+            _audioKbpsUI.selectedSegmentIndex = 4;
             _bwEstModeUI.selectedSegmentIndex = 0;
             break;
         case KSYStreamerProfile_360p_1:
@@ -239,7 +238,7 @@ numberOfRowsInComponent:(NSInteger)component {
             _videoCodecUI.selectedSegmentIndex = 0;
             _videoKbpsUI.slider.value = 512;
             _audioCodecUI.selectedSegmentIndex = 2;
-            _audioKbpsUI.selectedSegmentIndex = 3;
+            _audioKbpsUI.selectedSegmentIndex = 4;
             _bwEstModeUI.selectedSegmentIndex = 0;
             break;
         case KSYStreamerProfile_360p_2:
@@ -249,7 +248,7 @@ numberOfRowsInComponent:(NSInteger)component {
             _videoCodecUI.selectedSegmentIndex = 0;
             _videoKbpsUI.slider.value = 512;
             _audioCodecUI.selectedSegmentIndex = 2;
-            _audioKbpsUI.selectedSegmentIndex = 3;
+            _audioKbpsUI.selectedSegmentIndex = 4;
             _bwEstModeUI.selectedSegmentIndex = 0;
             break;
         case KSYStreamerProfile_360p_3:
@@ -259,7 +258,7 @@ numberOfRowsInComponent:(NSInteger)component {
             _videoCodecUI.selectedSegmentIndex = 0;
             _videoKbpsUI.slider.value = 768;
             _audioCodecUI.selectedSegmentIndex = 2;
-            _audioKbpsUI.selectedSegmentIndex = 3;
+            _audioKbpsUI.selectedSegmentIndex = 4;
             _bwEstModeUI.selectedSegmentIndex = 0;
             break;
         case KSYStreamerProfile_540p_auto:
@@ -360,7 +359,7 @@ numberOfRowsInComponent:(NSInteger)component {
     self.btnH = rowHight*2;
     [self putSlider: _hostUrlUI andSwitch: _doneBtn];
     self.btnH = rowHight;
-    [self putRow:@[_lblCameraPosUI,_cameraPosUI,
+    [self putRowFit:@[_lblCameraPosUI,_cameraPosUI,
                    _lblGpuPixFmtUI,_gpuPixFmtUI] ];
     [self putLable:_lblProfileUI andView:_profileUI];
     if (_profileUI.selectedSegmentIndex){
@@ -385,7 +384,7 @@ numberOfRowsInComponent:(NSInteger)component {
     self.btnH = rowHight;
     [self putRow1:_demoLable];
     
-    //剩余空间全部用来放按钮  The remaining space is used to put the button
+    //剩余空间全部用来放按钮
     CGFloat yPos = self.yPos > self.height ? self.yPos  - self.height : self.yPos;
     self.btnH = (self.height - yPos - self.gap*2) / 2;
     [self putRow: @[_btn0,_btn4] ];
@@ -473,6 +472,8 @@ numberOfRowsInComponent:(NSInteger)component {
             return  KSYVideoCodec_VT264;
         case 3:
             return  KSYVideoCodec_QY265;
+        case 4:
+            return KSYVideoCodec_VT265;
         default:
             return  KSYVideoCodec_AUTO;
     }
@@ -517,6 +518,9 @@ numberOfRowsInComponent:(NSInteger)component {
     }
     else if(_gpuPixFmtUI.selectedSegmentIndex == 1) {
         return kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+    }
+    else if(_gpuPixFmtUI.selectedSegmentIndex == 2) {
+        return kCVPixelFormatType_420YpCbCr8Planar;
     }
     return kCVPixelFormatType_32BGRA;
 }

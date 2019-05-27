@@ -7,7 +7,7 @@
 //
 
 #import "KSYVideoListVC.h"
-#import <libksygpulive/libksygpulive.h>
+#import <libksygpulive/KSYMoviePlayerController.h>
 
 #pragma mark - KSYVideoListCell
 
@@ -55,17 +55,14 @@
 
 @implementation KSYVideoListVC
 
+- (id)initWithUrl:(NSURL *)videoListUrl{
+    if (self = [super init]) {
+        _videoUrls = @[videoListUrl,videoListUrl,videoListUrl,videoListUrl,videoListUrl];
+    }
+    return self;
+}
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    // 1.请在此处添加流地址
-    _videoUrls = @[@"rtmp://live.hkstv.hk.lxdns.com/live/hks",
-                   @"rtmp://live.hkstv.hk.lxdns.com/live/hks",
-                   @"rtmp://live.hkstv.hk.lxdns.com/live/hks",
-                   @"rtmp://live.hkstv.hk.lxdns.com/live/hks",
-                   @"rtmp://live.hkstv.hk.lxdns.com/live/hks",
-                   ];
-    
     // 此处初始化为0，也可根据其他方式保存的历史记录，进行初始化
     _playbackTimes = [NSMutableArray array];
     for (NSInteger i = 0; i < _videoUrls.count; ++i) {
@@ -109,13 +106,11 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     //取出所选视频的播放地址
-    NSString *urlStr = _videoUrls[indexPath.row];
-
+    NSURL *url = _videoUrls[indexPath.row];
     KSYVideoListCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-
     if (!_player){
         //初始化播放器
-        _player = [[KSYMoviePlayerController alloc] initWithContentURL:[NSURL URLWithString:urlStr]];
+        _player = [[KSYMoviePlayerController alloc] initWithContentURL:url];
         _player.scalingMode = MPMovieScalingModeAspectFill;
         _player.view.frame = cell.bounds;
         [cell.contentView addSubview:_player.view];
@@ -144,7 +139,7 @@
         // 重置播放器
         [_player reset:NO];
         // 设置新URL
-        [_player setUrl:[NSURL URLWithString:urlStr]];
+        [_player setUrl:url];
         // 播放视图添加到cell
         [_player.view removeFromSuperview];
         _player.view.frame = cell.bounds;

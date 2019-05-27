@@ -10,6 +10,7 @@
 #import "KSYPresetCfgView.h"
 #import "KSYAudioCtrlView.h"
 #import "KSYNameSlider.h"
+
 @interface KSYAudioCtrlView() {
     
 }
@@ -25,34 +26,44 @@
 - (id)init{
     self = [super init];
     // 混音音量
-    _micVol = [self addSliderName:@"Microphone volume" From:0.0 To:2.0 Init:0.9];//麦克风音量
-    _bgmVol = [self addSliderName:@"Background music volume"  From:0.0 To:2.0 Init:0.5];//背景乐音量
+    _micVol = [self addSliderName:@"麦克风音量" From:0.0 To:2.0 Init:0.9];
+    _bgmVol = [self addSliderName:@"背景乐音量"  From:0.0 To:2.0 Init:0.5];
     _bgmMix = [self addSwitch:YES];
-
-
-    _micInput = [self addSegCtrlWithItems:@[ @"Built-in mic", @"Headset", @"Bluetooth mic"]];//内置mic", @"耳麦", @"蓝牙mic
+    
+    _micInput = [self addSegCtrlWithItems:@[ @"内置mic", @"耳麦", @"蓝牙mic"]];
     [self initMicInput];
     
-    _lblAudioOnly    = [self addLable:@"Pure audio stream"]; // 关闭视频
+    _lblAudioOnly    = [self addLable:@"纯音频推流"]; // 关闭视频
     _swAudioOnly     = [self addSwitch:NO]; // 关闭视频
-    _lblMuteSt       = [self addLable:@"Mute the flow"];//静音推流
+    _lblMuteSt       = [self addLable:@"静音推流"];
     _muteStream      = [self addSwitch:NO];
     
-    _lblStereo     = [self addLable:@"Stereo flow"];//立体声推流
+    _lblStereo     = [self addLable:@"立体声推流"];
     _stereoStream  = [self addSwitch:NO];
-    _lblReverb  = [self addLable:@"reverberation"];//混响
-    _reverbType = [self addSegCtrlWithItems:@[@"shutdown", @"studio",
-                                              @"concert",@"KTV",@"small stage"]];
-    _lblPlayCapture = [self addLable:@"ear back"];
+    _lblReverb  = [self addLable:@"混响"];
+    _reverbType = [self addSegCtrlWithItems:@[@"关闭", @"录影棚",
+                                              @"演唱会",@"KTV",@"小舞台"]];
+    _lblPlayCapture = [self addLable:@"耳返"];
     _swPlayCapture  = [self addSwitch:NO];
-    _playCapVol= [self addSliderName:@"ear volume"  From:0.0 To:1.0 Init:0.5];
-    _effectType  = [self addSegCtrlWithItems:@[@"turn off sound",@"uncle", @"lolita", @"solemn", @"robot"]];
+    _playCapVol= [self addSliderName:@"耳返音量"  From:0.0 To:1.0 Init:0.5];
+    _effectType  = [self addSegCtrlWithItems:@[@"关闭变声",@"大叔", @"萝莉", @"庄严", @"机器人", @"自定义"]];
+    _reverbEffectParamsVaule= [self addSliderName:@"reverb参数值"  From:0.0 To:100.0 Init:0.0];
+    _delayEffectParamsVaule= [self addSliderName:@"delay参数值"  From:0.0 To:100.0 Init:50.0];
+    _pitchEffectParamsVaule= [self addSliderName:@"pitch参数值"  From:-2400.0 To:2400.0 Init:1.0];
+    _swReverbEffect  = [self addSwitch:NO];
+    _swDelayEffect  = [self addSwitch:NO];
+    _swPitchEffect  = [self addSwitch:NO];
+    _noiseSuppressSeg = [self addSegCtrlWithItems:@[@"关闭去噪",@"低", @"中", @"高", @"很高"]];
+    _noiseSuppressSeg.selectedSegmentIndex = 3;
+    _audioDataTypeSeg = [self addSegCtrlWithItems:@[@"CMSampleBufer",@"RawPcm"]];
     return self;
 }
 - (void)layoutUI{
     [super layoutUI];
     self.btnH = 30;
-
+    if (self.width > self.height) {
+        self.btnH = 25;
+    }
     [self putRow1:_micVol];
     [self putSlider:_bgmVol
           andSwitch:_bgmMix];
@@ -63,8 +74,13 @@
                       nu, _lblMuteSt,_muteStream,
                       nu,_lblPlayCapture,_swPlayCapture] ];
     [self putRow1:_playCapVol];
+    [self putRowFit:@[_lblStereo, _stereoStream, _audioDataTypeSeg]];
+    [self putRow1:_noiseSuppressSeg];
     [self putRow1:_effectType];
-    [self putRowFit:@[_lblStereo, _stereoStream]];
+    [self putSlider:_reverbEffectParamsVaule andSwitch:_swReverbEffect];
+    [self putSlider:_delayEffectParamsVaule andSwitch:_swDelayEffect];
+    [self putSlider:_pitchEffectParamsVaule andSwitch:_swPitchEffect];
+    
 }
 - (void) initMicInput {
     BOOL bHS = [AVAudioSession isHeadsetInputAvaible];
@@ -118,12 +134,21 @@ static KSYMicType int2MicType( int t) {
 @synthesize audioEffect = _audioEffect;
 - (void) setAudioEffect:(KSYAudioEffectType)audioEffect {
     _audioEffect = audioEffect;
-    if (_audioEffect < 5 ) {
+    if (_audioEffect < 6 ) {
         _effectType.selectedSegmentIndex  = (NSInteger) _audioEffect;
     }
 }
 - (KSYAudioEffectType) audioEffect {
     _audioEffect =  _effectType.selectedSegmentIndex;
     return _audioEffect;
+}
+
+@synthesize noiseSuppress = _noiseSuppress;
+- (KSYAudioNoiseSuppress) noiseSuppress {
+    return _noiseSuppressSeg.selectedSegmentIndex - 1; // off is -1
+}
+@synthesize audioDataType = _audioDataType;
+- (KSYAudioDataType) audioDataType {
+    return _audioDataTypeSeg.selectedSegmentIndex;
 }
 @end

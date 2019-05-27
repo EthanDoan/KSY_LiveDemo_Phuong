@@ -14,27 +14,44 @@
 #import "KSYBgmView.h"
 #import "KSYPipView.h"
 #import "KSYNameSlider.h"
-
+#import "KSYQRCode.h"
+#import <YYImage/YYImage.h>
+#if  __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
 #import <CallKit/CXCallObserver.h>
 #import <CallKit/CallKit.h>
+#endif
 
-// 为防止将手机存储写满,限制录像时长为30s  To prevent the phone memory is full, limit the recording time to 30s
-#define REC_MAX_TIME 60 //录制视频的最大时间，单位s  The maximum time to record the video, the unit s
+// 为防止将手机存储写满,限制录像时长为30s
+#define REC_MAX_TIME 30 //录制视频的最大时间，单位s
 
-@interface KSYStreamerVC () <UIImagePickerControllerDelegate,UINavigationControllerDelegate, CXCallObserverDelegate>{
+@interface KSYStreamerVC () <UIImagePickerControllerDelegate
+,UINavigationControllerDelegate
+#if  __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+,CXCallObserverDelegate
+#endif
+>{
     UISwipeGestureRecognizer *_swipeGest;
     NSDateFormatter * _dateFormatter;
-    int _strSeconds; // 推流持续的时间 , 单位s  The duration of the flow, the unit s
+    int _strSeconds; // 推流持续的时间 , 单位s
     
-    BOOL _bRecord;//是推流还是录制到本地  Is pushing or recording to the local
-    NSString *_bypassRecFile;// 旁路录制  Bypass recording
-    // 旁路录制:一边推流到rtmp server, 一边录像到本地文件  Bypass recording: while pushing to rtmp server, while the video to the local file
-    // 本地录制:直接存储到本地  Local recording: Store directly to local
-    UIImageView *_foucsCursor;//对焦框 Focus frame
-    CGFloat _currentPinchZoomFactor;//当前触摸缩放因子  Touch the zoom factor
-    UIView *_bgView;        // 预览视图父控件（用于处理转屏，保持画面相对手机不变）  Preview view of the parent control (used to handle the transfer screen, keep the screen relative to the phone unchanged)
-    BOOL _bOutputInfo;//是否输出推流过程中的统计信息  Whether to output statistics during the flow
+    BOOL _bRecord;//是推流还是录制到本地
+    NSString *_bypassRecFile;// 旁路录制
+    // 旁路录制:一边推流到rtmp server, 一边录像到本地文件
+    // 本地录制:直接存储到本地
+    UIImageView *_foucsCursor;//对焦框
+    CGFloat _currentPinchZoomFactor;//当前触摸缩放因子
+    BOOL _bOutputInfo;//是否输出推流过程中的统计信息
+#if  __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
     CXCallObserver *_callObserver;
+#endif
+    YYImageDecoder  * _animateDecoder;
+    int _animateIdx;
+    
+    NSTimeInterval   _dlTime;
+    NSLock          *_dlLock;
+    KSYGPUPicture *_logoPicure;
+    UIImageOrientation _logoOrientation;
+    CADisplayLink   *_displayLink;
 }
 
 @end
@@ -45,8 +62,9 @@
     self = [super init];
     _presetCfgView = presetCfgView;
     [self initObservers];
-    _menuNames = @[@"Bg-music", @"image/beauty",@"sound", @"message", @"other"];//背景音乐", @"图像/美颜",@"声音", @"消息", @"其他
-    self.view.backgroundColor = [UIColor whiteColor];
+    _menuNames = @[@"背景音乐", @"图像/美颜",@"声音", @"消息", @"其他"];
+    self.view.backgroundColor = [UIColor blackColor];
+    _dlLock = [[NSLock alloc] init];
     return self;
 }
 
@@ -61,60 +79,36 @@
     [self addfoucsCursor];
     [self addPinchGestureRecognizer];
     if (_presetCfgView.profileUI.selectedSegmentIndex){
-        [self setCustomizeCfg];//自定义  customize
-
-    }else{//预设等级  Default level
-        _kit.streamerProfile = _presetCfgView.curProfileIdx;//配置profile  Configuration profile
+        [self setCustomizeCfg];//自定义
+    }else{//预设等级
+        _kit.streamerProfile = _presetCfgView.curProfileIdx;//配置profile
     }
-    // 采集相关设置初始化  Acquire the associated settings to initialize
+    // load default value
+    _miscView.vEncPerf = _kit.streamerBase.videoEncodePerf;
+    // 采集相关设置初始化
     [self setCaptureCfg];
-    //推流相关设置初始化  Push-current settings are initialized
+    //推流相关设置初始化
     [self setStreamerCfg];
-    // 打印版本号信息  Print the version number information
+    // 打印版本号信息
     NSLog(@"version: %@", [_kit getKSYVersion]);
 
     [self setupLogo];
     _bypassRecFile =[NSHomeDirectory() stringByAppendingString:@"/Library/Caches/rec.mp4"];
+    weakObj(self);
     _kit.streamerBase.bypassRecordStateChange = ^(KSYRecordState state) {
-        //旁路录制状态改变会调用该block  The bypass record state change will call the block
-        [self onBypassRecordStateChange:state];
+        //旁路录制状态改变会调用该block
+        [selfWeak onBypassRecordStateChange:state];
     };
-    
-    NSLog(@"***** hostUrl: %@", self.hostURL);
-
 }
 
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
-    [self layoutPreviewBgView];
     if (_kit) { // init with default filter
+        // 确保videoOrientation为正确的方向正确，否则画面方向会有异常
         _kit.videoOrientation = [[UIApplication sharedApplication] statusBarOrientation];
         [_kit setupFilter:self.ksyFilterView.curFilter];
         [_kit startPreview:_bgView];
     }
-}
-
-// 根据状态栏方向初始化预览的bgView  Initialize the preview bgView according to the status bar
-- (void)layoutPreviewBgView{
-    // size
-    CGFloat minLength = MIN(_bgView.frame.size.width, _bgView.frame.size.height);
-    CGFloat maxLength = MAX(_bgView.frame.size.width, _bgView.frame.size.height);
-    CGRect newFrame;
-    // frame
-    CGAffineTransform newTransform;
-    
-    UIInterfaceOrientation currentInterfaceOrientation = [UIApplication sharedApplication].statusBarOrientation;
-    
-    if (currentInterfaceOrientation == UIInterfaceOrientationPortrait) {
-        newTransform = CGAffineTransformIdentity;
-        newFrame = CGRectMake(0, 0, minLength, maxLength);
-    } else {
-        newTransform = CGAffineTransformMakeRotation(M_PI_2*(currentInterfaceOrientation == UIInterfaceOrientationLandscapeLeft ? 1 : -1));
-        newFrame = CGRectMake(0, 0, maxLength, minLength);
-    }
-    
-    _bgView.transform = newTransform;
-    _bgView.frame = newFrame;
 }
 
 - (void) addSwipeGesture{
@@ -133,11 +127,16 @@
 }
 
 - (void)addSubViews{
-    _bgView = [[UIView alloc] initWithFrame:self.view.bounds];
-    [self.view addSubview:_bgView];
+    _bgView = [[UIView alloc] init];
+    [self.view addSubview: _bgView];
     _ctrlView  = [[KSYCtrlView alloc] initWithMenu:_menuNames];
+    _colView = [[KSYCollectionView alloc] init];
+    _decalBGView = [[KSYDecalBGView alloc] init];
     [self.view addSubview:_ctrlView];
-    _ctrlView.frame = self.view.frame;
+    [self.view addSubview:_colView];
+    [self.colView addSubview:_decalBGView];
+    [self.colView sendSubviewToBack:_decalBGView];
+    _colView.hidden = YES;
     _ksyFilterView  = [[KSYFilterView alloc]initWithParent:_ctrlView];
     _ksyBgmView     = [[KSYBgmView alloc]initWithParent:_ctrlView];
     _audioView      = [[KSYAudioCtrlView alloc]initWithParent:_ctrlView];
@@ -145,10 +144,13 @@
     
     // connect UI
     weakObj(self);
+    _colView.DEBlock = ^(NSString *imgName){
+        [selfWeak genDecalViewWithImgName:imgName];
+    };
     _ctrlView.onBtnBlock = ^(id btn){
         [selfWeak onBasicCtrl:btn];
     };
-    // 背景音乐控制页面  Background music control page
+    // 背景音乐控制页面
     _ksyBgmView.onBtnBlock = ^(id sender) {
         [selfWeak onBgmBtnPress:sender];
     };
@@ -158,10 +160,11 @@
     _ksyBgmView.onSegCtrlBlock = ^(id sender) {
         [selfWeak onBgmCtrSle:sender];
     };
+    [selfWeak onBgmCtrSle:_ksyBgmView.loopType];
     _ksyBgmView.progressBar.dragingSliderCallback = ^(float progress) {
         [selfWeak.kit.bgmPlayer seekToProgress:progress];
     };
-    // 滤镜相关参数改变  Filter related parameters change
+    // 滤镜相关参数改变
     _ksyFilterView.onSegCtrlBlock=^(id sender) {
         [selfWeak onFilterChange:sender];
     };
@@ -171,7 +174,7 @@
     _ksyFilterView.onSwitchBlock=^(id sender) {
         [selfWeak onFilterSwitch:sender];
     };
-    // 混音相关参数改变  Mixing related parameters change
+    // 混音相关参数改变
     _audioView.onSwitchBlock=^(id sender){
         [selfWeak onAMixerSwitch:sender];
     };
@@ -181,7 +184,7 @@
     _audioView.onSegCtrlBlock=^(id sender){
         [selfWeak onAMixerSegCtrl:sender];
     };
-    // 其他杂项  Other miscellaneous
+    // 其他杂项
     _miscView.onBtnBlock = ^(id sender) {
         [selfWeak onMiscBtns: sender];
     };
@@ -194,9 +197,13 @@
     _miscView.onSegCtrlBlock=^(id sender){
         [selfWeak onMisxSegCtrl:sender];
     };
+    _colView.onBtnBlock=^(id sender){
+        [selfWeak onColBtns:sender];
+    };
     self.onNetworkChange = ^(NSString * msg){
         selfWeak.ctrlView.lblNetwork.text = msg;
     };
+    [self layoutUI];
 }
 
 - (void) initObservers{
@@ -206,9 +213,10 @@
                 SEL_VALUE(onNetStateEvent:) ,       KSYNetStateEventNotification,
                 SEL_VALUE(onBgmPlayerStateChange:) ,KSYAudioStateDidChangeNotification,
                 nil];
-    
+#if  __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
     _callObserver = [[CXCallObserver alloc] init];
     [_callObserver setDelegate:self queue:nil];
+#endif
 }
 
 - (void) addObservers {
@@ -227,13 +235,26 @@
 - (void) rmObservers {
     [super rmObservers];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+#if  __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
     _callObserver = nil;
+#endif
 }
 
 - (void) layoutUI {
+    // 适配预览区域为 16:9, 当设备为iPhoneX时,屏幕比例不是16:9, previewRect为上下填黑边后的区域.
+    CGRect previewRect = [self calcPreviewRect:16.0/9.0];
+    _bgView.frame = previewRect;
     if(_ctrlView){
-        _ctrlView.frame = self.view.frame;
+        _ctrlView.frame = previewRect;
         [_ctrlView layoutUI];
+    }
+    if(_colView){
+        _colView.frame = previewRect;
+        [_colView layoutUI];
+    }
+    if (_decalBGView){
+        _decalBGView.frame = previewRect;
+        [self updateAePicView];
     }
 }
 - (NSString *) timeStr {
@@ -246,36 +267,91 @@
 }
 #pragma mark - logo setup
 - (void) setupLogo{
-    CGFloat yPos = 0.05;
-    // 预览视图的scale  Preview the scale of the view
-    CGFloat scale = MAX(_bgView.frame.size.width, _bgView.frame.size.height) / self.view.frame.size.height;
-    CGFloat hgt  = 0.1 * scale; // logo图片的高度是预览画面的十分之一  Logo The height of the picture is one-tenth of the preview screen
-    UIImage * logoImg = [UIImage imageNamed:@"ksvc"];
     
-    _kit.logoPic  = [[GPUImagePicture alloc] initWithImage:logoImg];
-    _kit.logoRect = CGRectMake(0.05, yPos, 0, hgt);
+    UIImage * logoImg = [UIImage imageNamed:@"ksvc"];
+    _logoPicure   =  [[KSYGPUPicture alloc] initWithImage:logoImg];
+    _kit.logoPic  = _logoPicure;
+    _logoOrientation = logoImg.imageOrientation;
+    [_kit setLogoOrientaion: _logoOrientation];
     _kit.logoAlpha= 0.5;
-    yPos += hgt;
     _miscView.alphaSl.normalValue = _kit.logoAlpha;
     _kit.textLabel.numberOfLines = 2;
     _kit.textLabel.textAlignment = NSTextAlignmentCenter;
     NSString * timeStr = [self timeStr];
     _kit.textLabel.text = [NSString stringWithFormat:@"ksyun\n%@", timeStr];
     [_kit.textLabel sizeToFit];
-    _kit.textRect = CGRectMake(0.05, yPos, 0, 0.04 * scale); // 水印文字的高度为预览画面的 0.04倍  The height of the watermark text is 0.04 times the preview screen
     [_kit updateTextLabel];
+    [self setupLogoRect];
+}
+- (void) setupLogoRect{
+    CGFloat yPos = 0.05;
+    // 预览视图的scale
+    CGSize frameSz = _ctrlView.frame.size;
+    CGFloat scale = MAX(frameSz.width, frameSz.height) / frameSz.height;
+    CGFloat hgt  = 0.1 * scale; // logo图片的高度是预览画面的十分之一
+    _kit.logoRect = CGRectMake(0.05, yPos, 0, hgt);
+    yPos += hgt;
+    _kit.textRect = CGRectMake(0.05, yPos, 0, 0.04 * scale); // 水印文字的高度为预览画面的 0.04倍
 }
 
 - (void) updateLogoText {
     UIApplicationState appState = [UIApplication sharedApplication].applicationState;
     if (appState != UIApplicationStateActive){
         return;
-    } // 将当前时间显示在左上角  Show the current time in the upper left corner
+    } // 将当前时间显示在左上角
     NSString * timeStr = [self timeStr];
     _kit.textLabel.text = [NSString stringWithFormat:@"ksyun\n%@", timeStr];
     [_kit updateTextLabel];
 }
 
+- (void) setupAnimateLogo:(NSString*)path {
+    NSData *data = [NSData dataWithContentsOfFile:path];
+    [_dlLock lock];
+    _animateDecoder = [YYImageDecoder decoderWithData:data scale: [[UIScreen mainScreen] scale]];
+    [_kit setLogoOrientaion:UIImageOrientationUp];
+    [_dlLock unlock];
+    _animateIdx = 0;
+    _dlTime = 0;
+    if(!_displayLink){
+        KSYWeakProxy *proxy = [KSYWeakProxy proxyWithTarget:self];
+        SEL dpCB = @selector(displayLinkCallBack:);
+        _displayLink = [CADisplayLink displayLinkWithTarget:proxy
+                                                   selector:dpCB];
+        [_displayLink addToRunLoop:[NSRunLoop currentRunLoop]
+                           forMode:NSRunLoopCommonModes];
+    }
+}
+
+- (void) updateAnimateLogo {
+    if (_animateDecoder==nil) {
+        return;
+    }
+    [_dlLock lock];
+    YYImageFrame* frame = [_animateDecoder frameAtIndex:_animateIdx
+                                       decodeForDisplay:NO];
+    if (frame.image) {
+        _kit.logoPic = [[GPUImagePicture alloc] initWithImage:frame.image];
+    }
+    _animateIdx = (_animateIdx+1)%_animateDecoder.frameCount;
+    [_dlLock unlock];
+}
+
+- (void)displayLinkCallBack:(CADisplayLink *)link {
+    dispatch_async( dispatch_get_global_queue(0, 0), ^(){
+        if (_animateDecoder) {
+            _dlTime += link.duration;
+            // 读取 图像的 duration 来决定下一帧的刷新时间
+            // 也可以固定设置为一个值来调整动画的快慢程度
+            NSTimeInterval delay = [_animateDecoder frameDurationAtIndex:_animateIdx];
+            if (delay < 0.04) {
+                delay = 0.04;
+            }
+            if (_dlTime < delay) return;
+            _dlTime -= delay;
+            [self updateAnimateLogo];
+        }
+    });
+}
 #pragma mark - Capture & stream setup
 - (void) setCustomizeCfg {
     _kit.capPreset        = [self.presetCfgView capResolution];
@@ -296,16 +372,23 @@
     _kit.cameraPosition = [self.presetCfgView cameraPos];
     _kit.gpuOutputPixelFormat = [self.presetCfgView gpuOutputPixelFmt];
     _kit.capturePixelFormat   = [self.presetCfgView gpuOutputPixelFmt];
+    _kit.aCapDev.noiseSuppressionLevel = self.audioView.noiseSuppress;
+    weakObj(self);
     _kit.videoProcessingCallback = ^(CMSampleBufferRef buf){
-        // 在此处添加自定义图像处理, 直接修改buf中的图像数据会传递到观众端  Add custom image processing here, directly modify the buf in the image data will be passed to the audience
-        // 或复制图像数据之后再做其他处理, 则观众端仍然看到处理前的图像  Or copy the image data and then do other processing, the audience still see the image before processing
+        selfWeak.ctrlView.lblStat.capFrames += 1; // 统计预览帧率(实际使用时不需要)
+        // 在此处添加自定义图像处理, 直接修改buf中的图像数据会传递到观众端
+        // 或复制图像数据之后再做其他处理, 则观众端仍然看到处理前的图像
     };
     _kit.audioProcessingCallback = ^(CMSampleBufferRef buf){
-        // 在此处添加自定义音频处理, 直接修改buf中的pcm数据会传递到观众端  Add custom audio processing here, directly modify the pcm data in buf will be passed to the audience
-        // 或复制音频数据之后再做其他处理, 则观众端仍然听到原始声音  Or copy the audio data and then do other processing, the audience still hear the original sound
+        // 在此处添加自定义音频处理, 直接修改buf中的pcm数据会传递到观众端
+        // 或复制音频数据之后再做其他处理, 则观众端仍然听到原始声音
+    };
+    _kit.pcmProcessingCallback = ^(uint8_t** pData, int len, const AudioStreamBasicDescription* fmt, CMTime timeInfo){
+        // 在此处添加自定义音频处理, 直接修改pcm数据会传递到观众端
+        // 或复制音频数据之后再做其他处理, 则观众端仍然听到原始声音
     };
     _kit.interruptCallback = ^(BOOL bInterrupt){
-        // 在此处添加自定义图像采集被打断的处理 (比如接听电话等)  Where you add custom image capture interrupted processing (such as answering calls, etc.)
+        // 在此处添加自定义图像采集被打断的处理 (比如接听电话等)
     };
 }
 
@@ -316,10 +399,22 @@
     _kit.streamerBase.videoMaxBitrate  = 1000;
     _kit.streamerBase.videoMinBitrate  =    0;
     _kit.streamerBase.audiokBPS        =   48;
+    // 设置编码的场景
+    _kit.streamerBase.liveScene       = KSYLiveScene_Default;
+    // 设置编码码率控制
+    _kit.streamerBase.recScene        = KSYRecScene_ConstantQuality;
+    // 视频编码性能档次 (硬编码建议用HighPerformance)
+    if(_kit.streamerBase.videoCodec == KSYVideoCodec_AUTO ||
+       _kit.streamerBase.videoCodec == KSYVideoCodec_VT264) {
+        _kit.streamerBase.videoEncodePerf = KSYVideoEncodePer_HighPerformance;
+    }
+    else { // 软编码建议用 lowpower
+        _kit.streamerBase.videoEncodePerf = KSYVideoEncodePer_LowPower;
+    }
     _kit.streamerBase.logBlock = ^(NSString* str){
         NSLog(@"%@", str);
     };
-    _hostURL = [NSURL URLWithString:@"rtmp://test.uplive.ks-cdn.com/live/123"];
+    _hostURL = [NSURL URLWithString:@"rtmp://120.92.224.235/live/123"];
 }
 - (void) setStreamerCfg { // must set after capture
     if (_kit.streamerBase == nil) {
@@ -341,6 +436,7 @@
     _kit.streamerBase.liveScene       = self.miscView.liveScene;
     _kit.streamerBase.recScene        = self.miscView.recScene;
     _kit.streamerBase.videoEncodePerf = self.miscView.vEncPerf;
+    
     _strSeconds = 0;
     self.miscView.liveSceneSeg.enabled = !bStart;
     self.miscView.recSceneSeg.enabled = !bStart;
@@ -351,10 +447,10 @@
     _kit.maxAutoRetry = (int)_miscView.autoReconnect.slider.value;
     [self updateSwAudioOnly:bStart];
     
-    //判断是直播还是录制  Whether the judgment is live or recorded
+    //判断是直播还是录制
     NSString* title = _ctrlView.btnStream.currentTitle;
-    _bRecord = [title isEqualToString:@"Start recording"];//开始录制
-    _miscView.swBypassRec.enabled = !_bRecord; // 直接录制时, 不能旁路录制  Direct recording can not be recorded while bypassing
+    _bRecord = [ title isEqualToString:@"开始录制"];
+    _miscView.swBypassRec.enabled = !_bRecord; // 直接录制时, 不能旁路录制
     if (_bRecord && bStart){
         [self deleteFile:[_presetCfgView hostUrl]];
     }
@@ -363,22 +459,22 @@
 // 启动推流 / 停止推流
 - (void) updateSwAudioOnly : (BOOL) bStart {
     if (bStart) {
-        if (self.audioView.swAudioOnly.on) {  // 开启了纯音频推流  Open the pure audio stream
+        if (self.audioView.swAudioOnly.on) {  // 开启了纯音频推流
             self.audioView.swAudioOnly.enabled = NO;
-            self.audioView.lblAudioOnly.text =@"Pure audio stream";// 纯音频流
-            _kit.streamerBase.bWithVideo = NO;  // 关闭视频  Close the video
+            self.audioView.lblAudioOnly.text =@"纯音频流";
+            _kit.streamerBase.bWithVideo = NO;  // 关闭视频
         }
         else {
             self.audioView.swAudioOnly.enabled = YES;
-            self.audioView.lblAudioOnly.text =@"Freeze the screen";
-            _kit.streamerBase.bWithVideo = YES; //未启用纯音频推流 开启视频  Open audio is not enabled for pure audio
+            self.audioView.lblAudioOnly.text =@"冻结画面";
+            _kit.streamerBase.bWithVideo = YES; //未启用纯音频推流 开启视频
         }
     }
     else {
-        if ([self.audioView.lblAudioOnly.text isEqualToString:@"Freeze the screen"]) {//冻结画面
+        if ([self.audioView.lblAudioOnly.text isEqualToString:@"冻结画面"]) {
             self.audioView.swAudioOnly.on = NO;
         }
-        self.audioView.lblAudioOnly.text = @"Pure audio stream";//纯音频流
+        self.audioView.lblAudioOnly.text = @"纯音频流";
         self.audioView.swAudioOnly.enabled = YES;
     }
 }
@@ -391,14 +487,16 @@
     }
     if (_kit.captureState == KSYCaptureStateIdle) {
         self.ctrlView.btnCapture.backgroundColor = [UIColor darkGrayColor];
+        self.audioView.audioDataTypeSeg.enabled = YES;
     }
     else if(_kit.captureState == KSYCaptureStateCapturing) {
         self.ctrlView.btnCapture.backgroundColor = [UIColor lightGrayColor];
+        self.audioView.audioDataTypeSeg.enabled = NO;
     }
 }
 
 - (void) onNetStateEvent     :(NSNotification *)notification{
-    //记录网络拥塞等事件所发生的次数  Record the number of events such as network congestion
+    //记录网络拥塞等事件所发生的次数
     switch (_kit.streamerBase.netStateCode) {
         case KSYNetStateCode_SEND_PACKET_SLOW: {
             _ctrlView.lblStat.notGoodCnt++;
@@ -426,8 +524,12 @@
 - (void) onBgmPlayerStateChange  :(NSNotification *)notification{
     NSString * st = [_kit.bgmPlayer getCurBgmStateName];
     _ksyBgmView.bgmStatus = [st substringFromIndex:17];
+    _ksyBgmView.pauseBtn.selected = NO;
     if (_kit.bgmPlayer.bgmPlayerState == KSYBgmPlayerStatePlaying) {
         _ksyBgmView.progressBar.totalTimeInSeconds = _kit.bgmPlayer.bgmDuration;
+    }
+    else if (_kit.bgmPlayer.bgmPlayerState == KSYBgmPlayerStatePaused) {
+        _ksyBgmView.pauseBtn.selected = YES;
     }
 }
 - (void) onStreamStateChange :(NSNotification *)notification{
@@ -441,7 +543,7 @@
         [self onStreamError:_kit.streamerBase.streamErrorCode];
     }
     else if (_kit.streamerBase.streamState == KSYStreamStateConnecting) {
-        [_ctrlView.lblStat initStreamStat]; // 尝试开始连接时,重置统计数据  When you try to start the connection, reset the statistics
+        [_ctrlView.lblStat initStreamStat]; // 尝试开始连接时,重置统计数据
         [self updateSwAudioOnly:YES];
     }
     else if (_kit.streamerBase.streamState == KSYStreamStateConnected) {
@@ -452,7 +554,7 @@
         [self updateSwAudioOnly:NO];
         self.ctrlView.btnStream.backgroundColor = [UIColor darkGrayColor];
     }
-    //状态为KSYStreamStateIdle且_bRecord为ture时，录制视频  When the status is KSYStreamStateIdle and _bRecord is ture, the video is recorded
+    //状态为KSYStreamStateIdle且_bRecord为ture时，录制视频
     if (_kit.streamerBase.streamState == KSYStreamStateIdle && _bRecord){
         [self saveVideoToAlbum:[_presetCfgView hostUrl]];
     }
@@ -511,8 +613,8 @@
     }
     _strSeconds++;
     [self updateLogoText];
-    [self updateRecLabel];  // 本地录制:直接存储到本地, 不推流  Local recording: Direct storage to local, no flow
-    [self updateBypassRecLable];//// 旁路录制:一边推流一边录像  Bypass recording: while pushing the side of the video
+    [self updateRecLabel];  // 本地录制:直接存储到本地, 不推流
+    [self updateBypassRecLable];//// 旁路录制:一边推流一边录像
 }
 
 #pragma mark - UI respond
@@ -542,13 +644,13 @@
 - (void)onMenuBtnPress:(UIButton *)btn{
     KSYUIView * view = nil;
     if (btn == _ctrlView.menuBtns[0] ){
-        view = _ksyBgmView; // 背景音乐播放相关  Background music play related
+        view = _ksyBgmView; // 背景音乐播放相关
     }
     else if (btn == _ctrlView.menuBtns[1] ){
-        view = _ksyFilterView; // 美颜滤镜相关  Beauty filter related
+        view = _ksyFilterView; // 美颜滤镜相关
     }
     else if (btn == _ctrlView.menuBtns[2] ){
-        view = _audioView;    // 混音控制台  Mixing console
+        view = _audioView;    // 混音控制台
         _audioView.micType = [[AVAudioSession sharedInstance] currentMicType];
         [_audioView initMicInput];
     }
@@ -558,20 +660,26 @@
     else if (btn == _ctrlView.menuBtns[4] ){
         view = _miscView;
     }
-    // 将菜单的按钮隐藏, 将触发二级菜单的view显示  Hiding the menu button will trigger the view of the secondary menu
+    // 将菜单的按钮隐藏, 将触发二级菜单的view显示
     if (view){
         [_ctrlView showSubMenuView:view];
     }
 }
 
 - (void)swipeController:(UISwipeGestureRecognizer *)swipGestRec{
+    if (_ctrlView.hidden == YES){
+        return;
+    }
     if (swipGestRec == _swipeGest){
-        CGRect rect = self.view.frame;
+        CGRect rect = _bgView.frame;
+        _ctrlView.lblStat.hideText = NO;
         if ( CGRectEqualToRect(rect, _ctrlView.frame)){
-            rect.origin.x = rect.size.width; // hide
+            rect.origin.x = self.view.frame.size.width; // hide
+            _ctrlView.lblStat.hideText = YES;
         }
+        weakObj(self);
         [UIView animateWithDuration:0.1 animations:^{
-            _ctrlView.frame = rect;
+            selfWeak.ctrlView.frame = rect;
         }];
     }
 }
@@ -579,7 +687,7 @@
 - (void)onBgmCtrSle:(UISegmentedControl*)sender {
     if ( sender == _ksyBgmView.loopType){
         weakObj(self);
-        if ( sender.selectedSegmentIndex == 0) { //单曲播放  Single play
+        if ( sender.selectedSegmentIndex == 0) { //单曲播放
             _kit.bgmPlayer.bgmFinishBlock = ^{};
         }
         else { // loop to next
@@ -620,7 +728,7 @@
         }];
     }
     else if (btn == _ksyBgmView.muteBtn){
-        // 仅仅是静音了本地播放, 推流中仍然有音乐  Just mute the local play, there is still music in the stream
+        // 仅仅是静音了本地播放, 推流中仍然有音乐
         _kit.bgmPlayer.bMuteBgmPlay = !_kit.bgmPlayer.bMuteBgmPlay;
     }
 }
@@ -633,14 +741,14 @@
     }
     [_kit.bgmPlayer startPlayBgm:path isLoop:NO];
 }
-// 背景音乐音量调节  Background music volume adjustment
+// 背景音乐音量调节
 - (void)onBgmSlider:(id )sl{
     if (sl == _ksyBgmView.volumSl){
-        // 仅仅修改播放音量, 观众音量请调节mixer的音量  Just adjust the playback volume, the audience volume, adjust the volume of the mixer
+        // 仅仅修改播放音量, 观众音量请调节mixer的音量
         _kit.bgmPlayer.bgmVolume = _ksyBgmView.volumSl.normalValue;
     }
     else if (sl == _ksyBgmView.pitchSl){
-        // 同时修改本地和观众端的 音调 (推荐变调的取值范围为 -3 到 3的整数)  While modifying the local and the audience side of the tone (recommended tone range of -3 to 3 integer)
+        // 同时修改本地和观众端的 音调 (推荐变调的取值范围为 -3 到 3的整数)
         _kit.bgmPlayer.bgmPitch = _ksyBgmView.pitchSl.value;
     }
 }
@@ -660,8 +768,9 @@
 }
 - (void) onCapture{
     if (!_kit.vCapDev.isRunning){
+        _kit.audioDataType = self.audioView.audioDataType;
         _kit.videoOrientation = [[UIApplication sharedApplication] statusBarOrientation];
-        // 重新开启预览是需要重新根据方向setupLogo  Reopening the preview is required to re-establish the setupLogo according to the direction
+        // 重新开启预览是需要重新根据方向setupLogo
         [self setupLogo];
         [_kit startPreview:_bgView];
     }
@@ -674,7 +783,6 @@
         _kit.streamerBase.streamState == KSYStreamStateError) {
         [self updateStreamCfg:YES];
         [_kit.streamerBase startStream:self.hostURL];
-        
     }
     else {
         [self updateStreamCfg:NO];
@@ -717,12 +825,12 @@
 #pragma mark - UI respond : audio ctrl
 - (void)onAMixerSwitch:(UISwitch *)sw{
     if (sw == _audioView.muteStream){
-        // 静音推流(发送音量为0的数据)  Mute the flow (send data with a volume of 0)
+        // 静音推流(发送音量为0的数据)
         BOOL mute = _audioView.muteStream.isOn;
         [_kit.streamerBase muteStream:mute];
     }
     else if (sw == _audioView.bgmMix){
-        // 背景音乐 是否 参与混音  Whether the background music is involved in the mix
+        // 背景音乐 是否 参与混音
         [_kit.aMixer setTrack:_kit.bgmTrack enable: sw.isOn];
     }
     else if (sw == _audioView.swAudioOnly && _kit.streamerBase) {
@@ -735,12 +843,51 @@
     }
     else if (sw == _audioView.swPlayCapture){
         if ( ![KSYAUAudioCapture isHeadsetPluggedIn] ) {
-            [KSYUIVC toast:@"No headphones, Open the ear will have a harsh sound" time:0.3];//没有耳机, 开启耳返会有刺耳的声音
+            [KSYUIVC toast:@"没有耳机, 开启耳返会有刺耳的声音" time:0.3];
             sw.on = NO;
             _kit.aCapDev.bPlayCapturedAudio = NO;
             return;
         }
         _kit.aCapDev.bPlayCapturedAudio = sw.isOn;
+    }
+    else if (sw == _audioView.swReverbEffect){
+        if (_audioView.audioEffect != KSYAudioEffectType_COUSTOM){
+            [KSYUIVC toast:@"切换至自定义模式，才可开启" time:0.3];
+            sw.on = NO;
+            return;
+        }
+        if (sw.on){
+            _kit.aCapDev.effectTypeFlag |= KSYAUReverb_FLAG;
+        }
+        else{
+            _kit.aCapDev.effectTypeFlag &= (~KSYAUReverb_FLAG);
+        }
+    }
+    else if (sw == _audioView.swDelayEffect){
+        if (_audioView.audioEffect != KSYAudioEffectType_COUSTOM){
+            [KSYUIVC toast:@"切换至自定义模式，才可开启" time:0.3];
+            sw.on = NO;
+            return;
+        }
+        if (sw.on){
+            _kit.aCapDev.effectTypeFlag |= KSYAUDelay_FLAG;
+        }
+        else{
+            _kit.aCapDev.effectTypeFlag &= (~KSYAUDelay_FLAG);
+        }
+    }
+    else if (sw == _audioView.swPitchEffect){
+        if (_audioView.audioEffect != KSYAudioEffectType_COUSTOM){
+            [KSYUIVC toast:@"切换至自定义模式，才可开启" time:0.3];
+            sw.on = NO;
+            return;
+        }
+        if (sw.on){
+            _kit.aCapDev.effectTypeFlag |= KSYAUPitchshift_FLAG;
+        }
+        else{
+            _kit.aCapDev.effectTypeFlag &= (~KSYAUPitchshift_FLAG);
+        }
     }
 }
 - (void)onAMixerSegCtrl:(UISegmentedControl *)seg{
@@ -753,10 +900,18 @@
         return;
     }
     else if (seg == _audioView.effectType) {
+        _audioView.swReverbEffect.on = NO;
+        _audioView.swDelayEffect.on = NO;
+        _audioView.swPitchEffect.on = NO;
         _kit.aCapDev.effectType = _audioView.audioEffect;
         return;
     }
+    else if (seg == _audioView.noiseSuppressSeg) {
+        _kit.aCapDev.noiseSuppressionLevel = _audioView.noiseSuppress;
+        return;
+    }
 }
+
 - (void)onAMixerSlider:(KSYNameSlider *)slider{
     float val = 0.0;
     if ([slider isKindOfClass:[KSYNameSlider class]]) {
@@ -776,19 +931,34 @@
             _kit.aCapDev.micVolume = slider.normalValue;
         }
     }
+    else if (slider == self.audioView.reverbEffectParamsVaule){
+        if (_kit.aCapDev && self.audioView.swReverbEffect.isOn){
+            [_kit.aCapDev setReverbParamID:kReverb2Param_DryWetMix withInValue:slider.value];
+        }
+    }
+    else if (slider == self.audioView.delayEffectParamsVaule){
+        if (_kit.aCapDev && self.audioView.swDelayEffect.isOn){
+            [_kit.aCapDev setDelayParamID:kDelayParam_WetDryMix withInValue:slider.value];
+        }
+    }
+    else if (slider == self.audioView.pitchEffectParamsVaule){
+        if (_kit.aCapDev && self.audioView.swPitchEffect.isOn){
+            [_kit.aCapDev setPitchParamID:kNewTimePitchParam_Pitch withInValue:slider.value];
+        }
+    }
 }
 
 #pragma mark - misc features
 - (void)onMiscBtns:(id)sender {
-    // 截图的三种方法:  Screenshots of the three methods:
+    // 截图的三种方法:
     if (sender == _miscView.btn0){
-        // 方法1: 开始预览后, 从streamer 直接将待编码的图片存为本地的文件  Method 1: After the start of the preview, from the streamer directly to the image to be encoded as a local file
+        // 方法1: 开始预览后, 从streamer 直接将待编码的图片存为本地的文件
         NSString* path =@"snapshot/c.jpg";
         [_kit.streamerBase takePhotoWithQuality:1 fileName:path];
         NSLog(@"Snapshot save to %@", path);
     }
     else if (sender == _miscView.btn1){
-        // 方法2: 开始预览后, 从streamer获取UIImage对象  Method 2: After starting the preview, get the UIImage object from the streamer
+        // 方法2: 开始预览后, 从streamer获取UIImage对象
         [_kit.streamerBase getSnapshotWithCompletion:^(UIImage * img){
             [KSYUIVC saveImage: img
                             to: @"snap1.png" ];
@@ -796,9 +966,9 @@
         }];
     }
     else if (sender == _miscView.btn2) {
-        // 方法3: 如果有美颜滤镜, 可以从滤镜上获取截图(UIImage) 不带水印  Method 3: If you have a beauty filter, you can get a screenshot from the filter (UIImage) without watermark
+        // 方法3: 如果有美颜滤镜, 可以从滤镜上获取截图(UIImage) 不带水印
         //GPUImageOutput * filter = self.ksyFilterView.curFilter;
-        // 方法4: 直接从预览mixer上获取截图(UIImage) 带水印  Method 4: Get a screenshot directly from the preview mixer (UIImage) with a watermark
+        // 方法4: 直接从预览mixer上获取截图(UIImage) 带水印
         GPUImageOutput * filter = _kit.vPreviewMixer;
         if (filter){
             [filter useNextFrameForImageCapture];
@@ -820,6 +990,56 @@
         picker.delegate = self;
         [self presentViewController:picker animated:YES completion:nil];
     }
+    else if (sender == _miscView.btn5) {
+        _kit.logoPic = nil;
+    }
+    else if (sender == _miscView.btnAnimate) {
+        if (_miscView.btnAnimate.selected) {
+            [self setupAnimateLogo:_miscView.animatePath];
+        }
+        else {
+            [_dlLock lock];
+            _animateDecoder = nil;
+            _kit.logoPic = _logoPicure;
+            [_kit setLogoOrientaion:_logoOrientation];
+            [_dlLock unlock];
+        }
+    }
+    else if (sender == _miscView.btnNext) {
+        if (_miscView.btnAnimate.selected) {
+            [self setupAnimateLogo:_miscView.animatePath];
+        }
+        else {
+            _animateDecoder = nil;
+        }
+    }
+    //弹出拉流地址及二维码
+    else if(sender == _miscView.buttonPlayUrlAndQR){
+        KSYQRCode *playUrlQRCodeVc = [[KSYQRCode alloc] init];
+        if (_bRecord) {
+            //状态为录制视频
+            playUrlQRCodeVc.url = [_presetCfgView.hostUrlUI.text lastPathComponent];
+        }else{
+            //状态为直播视频
+            //推流地址对应的拉流地址
+            NSString * uuidStr =[[[UIDevice currentDevice] identifierForVendor] UUIDString];
+            NSString *devCode  = [[uuidStr substringToIndex:3] lowercaseString];
+            NSString *streamPlaySrv = @"http://mobile.kscvbu.cn:8080/live";
+            NSString *streamPlayPostfix = @".flv";
+            playUrlQRCodeVc.url = [ NSString stringWithFormat:@"%@/%@%@", streamPlaySrv, devCode,streamPlayPostfix];
+        }
+        [self presentViewController:playUrlQRCodeVc animated:YES completion:nil];
+    }
+    else if(sender == _miscView.buttonAe){
+        _ctrlView.hidden = YES;
+        _colView.hidden = NO;
+        if(_decalBGView){
+            [_decalBGView removeFromSuperview];
+            [self.colView addSubview:_decalBGView];
+            [self.colView sendSubviewToBack:_decalBGView];
+            _decalBGView.interactionEnabled = YES;
+        }
+    }
 }
 
 - (void)onMiscSwitch:(UISwitch *)sw{
@@ -829,10 +1049,11 @@
 }
 
 - (void)onMiscSlider:(KSYNameSlider *)slider {
-    NSInteger layerIdx = _miscView.layerSeg.selectedSegmentIndex + 1;
     if (slider == _miscView.alphaSl){
+        NSInteger layerIdx = _miscView.layerSeg.selectedSegmentIndex;
+        NSString * title = [_miscView.layerSeg titleForSegmentAtIndex:layerIdx];
         float flt = slider.normalValue;
-        if (layerIdx == _kit.logoPicLayer) {
+        if ([ title isEqualToString:@"logo"]){
             _kit.logoAlpha = flt;
         }
         else {
@@ -842,9 +1063,10 @@
     }
 }
 - (void)onMisxSegCtrl:(UISegmentedControl *)seg {
-    NSInteger layerIdx = _miscView.layerSeg.selectedSegmentIndex + 1;
     if (seg == _miscView.layerSeg) {
-        if (layerIdx == _kit.logoPicLayer) {
+        NSInteger layerIdx = _miscView.layerSeg.selectedSegmentIndex;
+        NSString * title = [_miscView.layerSeg titleForSegmentAtIndex:layerIdx];
+        if ([ title isEqualToString:@"logo"]){
             _miscView.alphaSl.normalValue = [_kit logoAlpha];
         }
         else {
@@ -852,19 +1074,29 @@
         }
     }
 }
+- (void)onColBtns:(id)sender {
+    if (sender == _colView.btn0){
+        _colView.hidden = YES;
+        _ctrlView.hidden = NO;
+        if(_decalBGView){
+            [_decalBGView removeFromSuperview];
+            [self.view insertSubview:_decalBGView belowSubview:_ctrlView];
+            _decalBGView.interactionEnabled = NO;
+        }
+        [self updateAePicView];
+    }
+}
 
 #pragma mark - UIImagePickerControllerDelegate methods
 -(void)imagePickerController:(UIImagePickerController *)picker
        didFinishPickingImage:(UIImage *)image
                  editingInfo:(NSDictionary *)editingInfo {
-    _kit.logoPic  = [[GPUImagePicture alloc] initWithImage:image
-                                       smoothlyScaleOutput:YES];
+    _logoPicure = [[KSYGPUPicture alloc] initWithImage:image andOutputSize:image.size];
+    _kit.logoPic = _logoPicure;
+    _logoOrientation = image.imageOrientation;
+    [_kit setLogoOrientaion: _logoOrientation];
     [picker dismissViewControllerAnimated:YES completion:nil];
     if (picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
-        [_kit.vPreviewMixer setPicRotation:kGPUImageRotateRight
-                                   ofLayer:_kit.logoPicLayer];
-        [_kit.vStreamMixer setPicRotation:kGPUImageRotateRight
-                                  ofLayer:_kit.logoPicLayer];
         [self restartVideoCapSession];
     }
 }
@@ -889,13 +1121,13 @@
     BOOL bRec = _kit.streamerBase.bypassRecordState == KSYRecordStateRecording;
     if (_miscView.swBypassRec.on){
         if ( _kit.streamerBase.isStreaming && !bRec){
-            // 如果启动录像时使用和上次相同的路径,则会覆盖掉上一次录像的文件内容  If you start the video using the same path last time, it will overwrite the contents of the last video file
+            // 如果启动录像时使用和上次相同的路径,则会覆盖掉上一次录像的文件内容
             [self deleteFile:_bypassRecFile];
             NSURL *url =[[NSURL alloc] initFileURLWithPath:_bypassRecFile];
             [_kit.streamerBase startBypassRecord:url];
         }
         else {
-            NSString * msg = @"Push the process to bypass the video";//推流过程中才能旁路录像
+            NSString * msg = @"推流过程中才能旁路录像";
             [KSYUIVC toast:msg time:1];
             _miscView.swBypassRec.on = NO;
         }
@@ -911,22 +1143,22 @@
     double dur = _kit.streamerBase.bypassRecordDuration;
     NSString* durStr=[NSString stringWithFormat:@"%3.0fs/%ds", dur,REC_MAX_TIME];
     _miscView.lblRecDur.text = durStr;
-    if (dur > REC_MAX_TIME) { // 为防止将手机存储写满,限制旁路录像时长为30s  To prevent the phone memory from being filled, limit the length of the bypass video 30s
+    if (dur > REC_MAX_TIME) { // 为防止将手机存储写满,限制旁路录像时长为30s
         _miscView.swBypassRec.on = NO;
         [_kit.streamerBase stopBypassRecord];
     }
 }
 
 - (void) updateRecLabel {
-    if (!_bRecord){ // 直接录制短视频  Direct recording of short video
+    if (!_bRecord){ // 直接录制短视频
         return;
     }
     int diff = REC_MAX_TIME - _strSeconds;
-    //保持连接和限制短视频长度  Keep connecting and limiting short video length
+    //保持连接和限制短视频长度
     if (_kit.streamerBase.isStreaming && diff < 0){
-        [self onStream];//结束录制  End recording
+        [self onStream];//结束录制
     }
-    if (_kit.streamerBase.isStreaming){//录制时的倒计时时间  The countdown time when recording
+    if (_kit.streamerBase.isStreaming){//录制时的倒计时时间
         NSString *durMsg = [NSString stringWithFormat:@"%ds\n",diff];
         _ctrlView.lblNetwork.text = durMsg;
     }
@@ -936,7 +1168,7 @@
 }
 
 
-//保存视频到相簿  Save the video to the album
+//保存视频到相簿
 - (void) saveVideoToAlbum: (NSString*) path {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if (![fileManager fileExistsAtPath:path]) {
@@ -949,7 +1181,7 @@
         }
     });
 }
-//保存mp4文件完成时的回调  Save the callback when the mp4 file is complete
+//保存mp4文件完成时的回调
 - (void)video:(NSString *)videoPath didFinishSavingWithError:(NSError *)error
   contextInfo:(void *)contextInfo {
     NSString *message;
@@ -961,7 +1193,7 @@
     }
     [KSYUIVC toast:message time:3];
 }
-//删除文件,保证保存到相册里面的视频时间是最新的   Delete the file, to ensure that the video saved to the album inside the time is the latest
+//删除文件,保证保存到相册里面的视频时间是最新的
 -(void)deleteFile:(NSString *)file{
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if ([fileManager fileExistsAtPath:file]) {
@@ -970,11 +1202,10 @@
 }
 #pragma mark - foucs
 /**
- @abstract 将UI的坐标转换成相机坐标  Converts the coordinates of the UI to camera coordinates
+ @abstract 将UI的坐标转换成相机坐标
  */
 - (CGPoint)convertToPointOfInterestFromViewCoordinates:(CGPoint)viewCoordinates
 {
-    CGPoint pointOfInterest = CGPointMake(.5f, .5f);
     CGSize frameSize = self.view.frame.size;
     CGSize apertureSize = [_kit captureDimension];
     CGPoint point = viewCoordinates;
@@ -1002,15 +1233,17 @@
             yc = 1.f - (point.x / x2);
         }
     }
-    pointOfInterest = CGPointMake(xc, yc);
-    return pointOfInterest;
+    return CGPointMake(xc, yc);
 }
 
-//设置摄像头对焦位置 Set the camera focus position
+//设置摄像头对焦位置
 -(void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
     UITouch *touch = [touches anyObject];
     CGPoint current = [touch locationInView:self.view];
     CGPoint point = [self convertToPointOfInterestFromViewCoordinates:current];
+    if (_ctrlView.hidden == YES){
+        return;
+    }
     [_kit exposureAtPoint:point];
     [_kit focusAtPoint:point];
     _foucsCursor.center = current;
@@ -1023,23 +1256,27 @@
     }];
 }
 
-//添加缩放手势，缩放时镜头放大或缩小  Add a zoom gesture to zoom in or out when zooming
+//添加缩放手势，缩放时镜头放大或缩小
 - (void)addPinchGestureRecognizer{
     UIPinchGestureRecognizer *pinch = [[UIPinchGestureRecognizer alloc]initWithTarget:self action:@selector(pinchDetected:)];
     [self.view addGestureRecognizer:pinch];
 }
 
 - (void)pinchDetected:(UIPinchGestureRecognizer *)recognizer{
+    if (_ctrlView.hidden == YES){
+        return;
+    }
     if (recognizer.state == UIGestureRecognizerStateBegan) {
         _currentPinchZoomFactor = _kit.pinchZoomFactor;
     }
-    CGFloat zoomFactor = _currentPinchZoomFactor * recognizer.scale;//当前触摸缩放因子*坐标比例  Current Touch Scaling Factor * Coordinate Scale
+    CGFloat zoomFactor = _currentPinchZoomFactor * recognizer.scale;//当前触摸缩放因子*坐标比例
     [_kit setPinchZoomFactor:zoomFactor];
 }
 
+#if  __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
 #pragma mark - CXCallObserverDelegate method
 - (void)callObserver:(CXCallObserver *)callObserver callChanged:(CXCall *)call {
-    //处理来电事件  Handle incoming calls
+    //处理来电事件
     NSMutableDictionary *message = [[NSMutableDictionary alloc] init];
     BOOL needSendMsg = YES;
     
@@ -1061,5 +1298,18 @@
     
     if(needSendMsg == YES)
         [_kit processMessageData:message];
+}
+#endif
+
+#pragma mark - Decal 相关
+- (void)genDecalViewWithImgName:(NSString *)imgName{
+    [_decalBGView genDecalViewWithImgName:imgName];
+}
+
+//刷新贴纸view
+- (void) updateAePicView{
+    if (_decalBGView){
+        _kit.aePic = [[GPUImageUIElement alloc] initWithView:_decalBGView];
+    }
 }
 @end

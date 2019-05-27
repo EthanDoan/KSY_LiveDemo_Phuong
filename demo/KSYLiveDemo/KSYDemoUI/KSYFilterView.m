@@ -9,6 +9,7 @@
 #import "KSYFilterView.h"
 #import "KSYNameSlider.h"
 #import "KSYPresetCfgView.h"
+#import "ZipArchive.h"
 
 
 @interface KSYFilterView() {
@@ -16,6 +17,8 @@
     NSInteger _curIdx;
     NSArray * _effectNames;
     NSInteger _curEffectIdx;
+    //GPUResource资源的存储路径
+    NSString *_gpuResourceDir;
 }
 
 @property (nonatomic) UILabel * lbPrevewFlip;
@@ -33,25 +36,50 @@
 
 - (id)init{
     self = [super init];
-//    _effectNames = [NSArray arrayWithObjects: @"1 小清新",  @"2 靓丽",
-//                    @"3 甜美可人",  @"4 怀旧",  @"5 蓝调",  @"6 老照片" ,
-//                    @"7 樱花", @"8 樱花（光线较暗）", @"9 红润（光线较暗）",
-//                    @"10 阳光（光线较暗）", @"11 红润", @"12 阳光", @"13 自然", nil];
-    
-    _effectNames = [NSArray arrayWithObjects: @"1 small fresh",  @"2 beautiful",
-                    @"3 Sweet and pleasant",  @"4 Nostalgic",  @"5 Blues",  @"6 Old photo" ,
-                    @"7 Cherry blossoms", @"8 Cherry blossoms（Light is dark）", @"9 Rosy（Light is dark）",
-                    @"10 Sunlight（Light is dark）", @"11 Rosy", @"12 Sunlight", @"13 Natural", nil];
-    
+    _effectNames = [NSArray arrayWithObjects:
+                    @"0 原图关闭特效",
+                    @"1 小清新",
+                    @"2 靓丽",
+                    @"3 甜美可人",
+                    @"4 怀旧",
+                    @"5 蓝调",
+                    @"6 老照片",
+                    @"7 樱花",
+                    @"8 樱花（适用于光线较暗的环境）",
+                    @"9 红润（适用于光线较暗的环境）",
+                    @"10 阳光（适用于光线较暗的环境）",
+                    @"11 红润",
+                    @"12 阳光",
+                    @"13 自然",
+                    @"14 恋人",
+                    @"15 高雅",
+                    @"16 红粉佳人 ",
+                    @"17 优格 ",
+                    @"18 流年 ",
+                    @"19 柔光 ",
+                    @"20 经典 ",
+                    @"21 初夏 ",
+                    @"22 黑白 ",
+                    @"23 纽约 ",
+                    @"24 上野 ",
+                    @"25 碧波 ",
+                    @"26 日系 ",
+                    @"27 清凉 ",
+                    @"28 移轴 ",
+                    @"29 梦幻 ",
+                    @"30 恬淡 ",
+                    @"31 候鸟 ",
+                    @"32 淡雅 ", nil];
+    [self downloadGPUResource];
     _curEffectIdx = 1;
     // 修改美颜参数
-    _filterParam1 = [self addSliderName:@"parameter" From:0 To:100 Init:50];//参数
-    _filterParam2 = [self addSliderName:@"Whitening" From:0 To:100 Init:50];//美白
-    _filterParam3 = [self addSliderName:@"Rosy" From:0 To:100 Init:50];//红润
+    _filterParam1 = [self addSliderName:@"参数" From:0 To:100 Init:50];
+    _filterParam2 = [self addSliderName:@"美白" From:0 To:100 Init:50];
+    _filterParam3 = [self addSliderName:@"红润" From:0 To:100 Init:50];
     _filterParam2.hidden = YES;
     _filterParam3.hidden = YES;
     
-    _proFilterLevel    = [self addSliderName:@"Type of" From:1 To:4 Init:1];//类型
+    _proFilterLevel    = [self addSliderName:@"类型" From:1 To:4 Init:1];
     _proFilterLevel.precision = 0;
     _proFilterLevel.slider.enabled = NO;
     _proFilterLevelStep  = [[UIStepper alloc] init];
@@ -65,25 +93,25 @@
     _proFilterLevel.hidden = YES;
     _proFilterLevelStep.hidden = YES;
     
-    _lblSeg = [self addLable:@"Filter"];//滤镜
+    _lblSeg = [self addLable:@"滤镜"];
     _filterGroupType = [self addSegCtrlWithItems:
-  @[ @"turn off",
-     @"Old beauty",//旧美颜
-     @"Beauty pro",//美颜pro
+  @[ @"关",
+     @"旧美颜",
+     @"美颜pro",
      @"natural",
-     @"Rosy",//红润
-     @"Special effects",//特效
+     @"红润",
+     @"特效",
      ]];
     _filterGroupType.selectedSegmentIndex = 1;
     [self selectFilter:1];
     
-    _lbPrevewFlip = [self addLable:@"preview mirror"];//预览镜像
-    _lbStreamFlip = [self addLable:@"Push the flow mirror"];//推流镜像
+    _lbPrevewFlip = [self addLable:@"预览镜像"];
+    _lbStreamFlip = [self addLable:@"推流镜像"];
     _swPrevewFlip = [self addSwitch:NO];
     _swStreamFlip = [self addSwitch:NO];
     
-    _lbUiRotate   = [self addLable:@"UI rotation"];//UI旋转
-    _lbStrRotate  = [self addLable:@"push flow"];//推流旋转
+    _lbUiRotate   = [self addLable:@"UI旋转"];
+    _lbStrRotate  = [self addLable:@"推流旋转"];
     _swUiRotate   = [self addSwitch:NO];
     _swStrRotate  = [self addSwitch:NO];
     _swStrRotate.enabled = NO;
@@ -95,6 +123,7 @@
     _effectPicker.dataSource = self;
     _effectPicker.showsSelectionIndicator= YES;
     _effectPicker.backgroundColor = [UIColor colorWithWhite:0.8 alpha:0.3];
+    [_effectPicker selectRow:1 inComponent:0 animated:YES];
     return self;
 }
 - (void)layoutUI{
@@ -161,7 +190,7 @@
         _curFilter  = nil;
     }
     else if (idx == 1){
-        _filterParam1.nameL.text = @"parameter";//参数
+        _filterParam1.nameL.text = @"参数";
         _filterParam1.hidden = NO;
         _curFilter = [[KSYGPUBeautifyExtFilter alloc] init];
     }
@@ -172,7 +201,7 @@
         _proFilterLevel.hidden = NO;
         _proFilterLevelStep.hidden = NO;
         KSYBeautifyProFilter * f = [[KSYBeautifyProFilter alloc] initWithIdx:_proFilterLevel.value];
-        _filterParam1.nameL.text = @"Dermabrasion";//磨皮
+        _filterParam1.nameL.text = @"磨皮";
         f.grindRatio  = _filterParam1.normalValue;
         f.whitenRatio = _filterParam2.normalValue;
         f.ruddyRatio  = _filterParam3.normalValue;
@@ -183,44 +212,55 @@
         _filterParam2.hidden = NO;
         _filterParam3.hidden = NO;
         KSYBeautifyProFilter * nf = [[KSYBeautifyProFilter alloc] initWithIdx:3];
-        _filterParam1.nameL.text = @"Dermabrasion";//磨皮
+        _filterParam1.nameL.text = @"磨皮";
         nf.grindRatio  = _filterParam1.normalValue;
         nf.whitenRatio = _filterParam2.normalValue;
         nf.ruddyRatio  = _filterParam3.normalValue;
         _curFilter    = nf;
     }
     else if (idx == 4){ // 红润 + 美颜
-        _filterParam1.nameL.text = @"Dermabrasion";//磨皮
-        _filterParam3.nameL.text = @"Rosy";//红润
+        _filterParam1.nameL.text = @"磨皮";
+        _filterParam3.nameL.text = @"红润";
         _filterParam1.hidden = NO;
         _filterParam2.hidden = NO;
         _filterParam3.hidden = NO;
-        UIImage * rubbyMat = [[self class] KSYGPUImageNamed:@"3_tianmeikeren.png"];
-        KSYBeautifyFaceFilter * bf = [[KSYBeautifyFaceFilter alloc] initWithRubbyMaterial:rubbyMat];
+        NSString *imgPath=[_gpuResourceDir stringByAppendingString:@"3_tianmeikeren.png"];
+        UIImage *rubbyMat=[[UIImage alloc]initWithContentsOfFile:imgPath];
+        if (rubbyMat == nil) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示"
+                                                            message:@"特效资源正在下载，请稍后重试"
+                                                           delegate:nil
+                                                  cancelButtonTitle:nil
+                                                  otherButtonTitles:@"确定", nil];
+            alert.alertViewStyle = UIAlertViewStyleDefault;
+            [alert show];
+        }
+        KSYBeautifyFaceFilter *bf = [[KSYBeautifyFaceFilter alloc] initWithRubbyMaterial:rubbyMat];
         bf.grindRatio  = _filterParam1.normalValue;
         bf.whitenRatio = _filterParam2.normalValue;
         bf.ruddyRatio  = _filterParam3.normalValue;
         _curFilter = bf;
     }
-    else if (idx == 5){ // 美颜 + 特效 滤镜组合/Beauty + special effects filter combination
-        _filterParam1.nameL.text = @"Dermabrasion";//磨皮/Dermabrasion
-        _filterParam3.nameL.text = @"Special effects";//特效/Special effects
+    else if (idx == 5){ // 美颜 + 特效 滤镜组合
+        _filterParam1.nameL.text = @"磨皮";
+        _filterParam3.nameL.text = @"特效";
         _filterParam1.hidden = NO;
         _filterParam2.hidden = NO;
         _filterParam3.hidden = NO;
         _effectPicker.hidden = NO;
         _proFilterLevel.hidden = NO;
         _proFilterLevelStep.hidden = NO;
-        // 构造美颜滤镜 和  特效滤镜/Construct beauty filters and special effects filters
+        // 构造美颜滤镜 和  特效滤镜
         KSYBeautifyProFilter    * bf = [[KSYBeautifyProFilter alloc] initWithIdx:_proFilterLevel.value];
-        KSYBuildInSpecialEffects * sf = [[KSYBuildInSpecialEffects alloc] initWithIdx:_curEffectIdx];
         bf.grindRatio  = _filterParam1.normalValue;
         bf.whitenRatio = _filterParam2.normalValue;
         bf.ruddyRatio  = 0.5;
+        
+        KSYBuildInSpecialEffects * sf = [[KSYBuildInSpecialEffects alloc] initWithIdx:_curEffectIdx];
         sf.intensity   = _filterParam3.normalValue;
         [bf addTarget:sf];
         
-        // 用滤镜组 将 滤镜 串联成整体/Use the filter group to cascade the filters into a whole
+        // 用滤镜组 将 滤镜 串联成整体
         GPUImageFilterGroup * fg = [[GPUImageFilterGroup alloc] init];
         [fg addFilter:bf];
         [fg addFilter:sf];
@@ -302,31 +342,42 @@ numberOfRowsInComponent:(NSInteger)component {
 - (void)pickerView:(UIPickerView *)pickerView
       didSelectRow:(NSInteger)row
        inComponent:(NSInteger)component {
-    _curEffectIdx = row+1;
-    if ( [_curFilter isMemberOfClass:[GPUImageFilterGroup class]]){
-        GPUImageFilterGroup * fg = (GPUImageFilterGroup *)_curFilter;
-        KSYBuildInSpecialEffects * sf = (KSYBuildInSpecialEffects *)[fg filterAtIndex:1];
-        [sf setSpecialEffectsIdx: _curEffectIdx];
+    _curEffectIdx = row;
+    if (! [_curFilter isMemberOfClass:[GPUImageFilterGroup class]]){
+        return;
     }
+    GPUImageFilterGroup * fg = (GPUImageFilterGroup *)_curFilter;
+    if (![fg.terminalFilter isMemberOfClass:[KSYBuildInSpecialEffects class]]) {
+        return;
+    }
+    KSYBuildInSpecialEffects * sf = (KSYBuildInSpecialEffects *)fg.terminalFilter;
+    [sf setSpecialEffectsIdx:_curEffectIdx];
 }
 
-#pragma mark - load resource from resource bundle
-+ (NSBundle*)KSYGPUResourceBundle {
-    static dispatch_once_t onceToken;
-    static NSBundle *resBundle = nil;
-    dispatch_once(&onceToken, ^{
-        resBundle = [NSBundle bundleWithURL:[[NSBundle mainBundle] URLForResource:@"KSYGPUResource" withExtension:@"bundle"]];
+-(void)downloadGPUResource{ // 下载资源文件
+    NSFileManager *fileManager = [[NSFileManager alloc] init];
+    _gpuResourceDir=[NSHomeDirectory() stringByAppendingString:@"/Documents/GPUResource/"];
+    // 判断文件夹是否存在，如果不存在，则创建
+    if (![[NSFileManager defaultManager] fileExistsAtPath:_gpuResourceDir]) {
+        [fileManager createDirectoryAtPath:_gpuResourceDir
+               withIntermediateDirectories:YES
+                                attributes:nil
+                                     error:nil];
+    }
+    NSString *zipPath = [_gpuResourceDir stringByAppendingString:@"KSYGPUResource.zip"];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:zipPath]) {
+        return; // already downloaded
+    }
+    NSString *zipUrl = @"https://ks3-cn-beijing.ksyun.com/ksy.vcloud.sdk/Ios/KSYLive_iOS_Resource/KSYGPUResource.zip";
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        NSURL *url =[NSURL URLWithString:zipUrl];
+        NSData *data =[NSData dataWithContentsOfURL:url];
+        [data writeToFile:zipPath atomically:YES];
+        ZipArchive *zipArchive = [[ZipArchive alloc] init];
+        [zipArchive UnzipOpenFile:zipPath ];
+        [zipArchive UnzipFileTo:_gpuResourceDir overWrite:YES];
+        [zipArchive UnzipCloseFile];
     });
-    return resBundle;
-}
-
-+ (UIImage*)KSYGPUImageNamed:(NSString*)name {
-    UIImage *imageFromMainBundle = [UIImage imageNamed:name];
-    if (imageFromMainBundle) {
-        return imageFromMainBundle;
-    }
-    UIImage *imageFromKSYBundle = [UIImage imageWithContentsOfFile:[[[KSYFilterView KSYGPUResourceBundle] resourcePath] stringByAppendingPathComponent:name]];
-    return imageFromKSYBundle;
 }
 
 @end
