@@ -72,13 +72,13 @@ typedef NS_ENUM(NSInteger, KSYDemoMenuType){
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"KSYDEMO";
-    _labelMenu = [self addLabelWithText:@"Demo 功能列表" textColor:[UIColor blueColor]];
-    _labelAddress = [self addLabelWithText:@"播放地址列表" textColor:[UIColor blueColor]];
+    _labelMenu = [self addLabelWithText:@"Demo function list" textColor:[UIColor blueColor]];
+    _labelAddress = [self addLabelWithText:@"Play address list" textColor:[UIColor blueColor]];
     //添加开始按钮
-    _buttonDone = [self addButton:@"开始"];
+    _buttonDone = [self addButton:@"Start"];
     self.view.backgroundColor = [UIColor whiteColor];
-    NSString * uuidStr =[[[UIDevice currentDevice] identifierForVendor] UUIDString];
-    NSString *devCode  = [[uuidStr substringToIndex:3] lowercaseString];
+//    NSString * uuidStr =[[[UIDevice currentDevice] identifierForVendor] UUIDString];
+//    NSString *devCode  = [[uuidStr substringToIndex:3] lowercaseString];
     //推流地址
 //    NSString *streamSrv  = @"rtmp://mobile.kscvbu.cn/live";
 //    NSString *streamUrl      = [ NSString stringWithFormat:@"%@/%@", streamSrv, devCode];
@@ -88,15 +88,15 @@ typedef NS_ENUM(NSInteger, KSYDemoMenuType){
     _arrayStreamAddress = [NSMutableArray arrayWithObjects:streamUrl,nil];
     
     //推流地址对应的拉流地址
-    NSString *streamPlaySrv = @"http://mobile.kscvbu.cn:8080/live";
-    NSString *streamPlayPostfix = @".flv";
-    NSString *streamPlayUrl = [ NSString stringWithFormat:@"%@/%@%@", streamPlaySrv, devCode,streamPlayPostfix];
+//    NSString *streamPlaySrv = @"http://mobile.kscvbu.cn:8080/live";
+//    NSString *streamPlayPostfix = @".flv";
+//    NSString *streamPlayUrl = [ NSString stringWithFormat:@"%@/%@%@", streamPlaySrv, devCode,streamPlayPostfix];
     
     //拉流地址
     NSString *playUrl = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
     _arrayPlayAddress = [NSMutableArray array];
     [_arrayPlayAddress addObject:playUrl];
-    [_arrayPlayAddress addObject:streamPlayUrl];
+//    [_arrayPlayAddress addObject:streamPlayUrl];
     [_arrayPlayAddress addObject:@"RecordAv.mp4"];
     //初始化时的默认Url
     _currentSelectUrl = _arrayPlayAddress[0];
@@ -204,17 +204,17 @@ typedef NS_ENUM(NSInteger, KSYDemoMenuType){
         if (row >= 0 && row <= 3) {
             //类型为播放
             _type = KSYDemoMenuType_PLAY;
-            _labelAddress.text = @"播放地址列表";
+            _labelAddress.text = @"Play address list";
             _currentSelectUrl = _arrayPlayAddress[0];
         }else if(row >= 5 && row <= 9){
             //类型为推流
             _type = KSYDemoMenuType_STREAM;
-            _labelAddress.text = @"推流地址列表";
+            _labelAddress.text = @"Stream address list";
             _currentSelectUrl = _arrayStreamAddress[0];
         }else if(row == 10){
             //类型为录制
             _type = KSYDemoMenuType_RECORD;
-            _labelAddress.text = @"录制文件名";
+            _labelAddress.text = @"Record file name";
             _currentSelectUrl = _arrayRecordFileName[0];
         }else if(row == 4 || row == 11){
             //类型为测试
@@ -292,25 +292,25 @@ typedef NS_ENUM(NSInteger, KSYDemoMenuType){
 - (void)initVariable{
     _vcNameDict = [[NSMutableDictionary alloc] init];
     _controllers = [[NSMutableArray alloc] init];
-    [self addMenu:@"播放demo"     withBlk:^(NSURL* url){return [[KSYPlayerCfgVC alloc]initWithURL:url fileList:nil];} ];
-    [self addMenu:@"视频列表"      withBlk:^(NSURL* url){return [[KSYVideoListVC alloc] initWithUrl:url];} ];
-    [self addMenu:@"文件格式探测"   withBlk:^(NSURL* url){return [[KSYProberVC alloc]initWithURL:url];} ];
-    [self addMenu:@"播放自动化测试" withBlk:^(NSURL* url){return [[KSYMonkeyTestVC alloc] init];} ];
+    [self addMenu:@"Play demo"     withBlk:^(NSURL* url){return [[KSYPlayerCfgVC alloc]initWithURL:url fileList:nil];} ];
+    [self addMenu:@"Video list"      withBlk:^(NSURL* url){return [[KSYVideoListVC alloc] initWithUrl:url];} ];
+    [self addMenu:@"File format detection"   withBlk:^(NSURL* url){return [[KSYProberVC alloc]initWithURL:url];} ];
+    [self addMenu:@"Play automated test" withBlk:^(NSURL* url){return [[KSYMonkeyTestVC alloc] init];} ];
 #ifndef KSYPlayer_Demo
-    [self addMenu:@"录制播放短视频" withBlk:^(NSURL* url){return [[KSYRecordVC alloc]initWithURL:url];} ];
-    [self addMenu:@"推流demo"     withBlk:^(NSURL* url){return [[KSYPresetCfgVC alloc]initWithURL:url];} ];
-    [self addMenu:@"极简推流"      withBlk:^(NSURL* url){return [[KSYSimplestStreamerVC alloc] initWithUrl:url];} ];
-    [self addMenu:@"半屏推流"      withBlk:^(NSURL* url){return [[KSYHorScreenStreamerVC alloc] initWithUrl:url];} ];
-    [self addMenu:@"画笔推流"      withBlk:^(NSURL* url){return [[KSYBrushStreamerVC alloc] initWithUrl:url];} ];
-    [self addMenu:@"背景图片推流"   withBlk:^(NSURL* url){return [[KSYBgpStreamerVC alloc] initWithUrl:url];} ];
-    [self addMenu:@"录制推流短视频" withBlk:^(NSURL* url){
+    [self addMenu:@"Record and play short videos" withBlk:^(NSURL* url){return [[KSYRecordVC alloc]initWithURL:url];} ];
+    [self addMenu:@"Live stream demo"     withBlk:^(NSURL* url){return [[KSYPresetCfgVC alloc]initWithURL:url];} ];
+    [self addMenu:@"Minimal stream"      withBlk:^(NSURL* url){return [[KSYSimplestStreamerVC alloc] initWithUrl:url];} ];
+    [self addMenu:@"Half screen stream"      withBlk:^(NSURL* url){return [[KSYHorScreenStreamerVC alloc] initWithUrl:url];} ];
+    [self addMenu:@"Brush stream"      withBlk:^(NSURL* url){return [[KSYBrushStreamerVC alloc] initWithUrl:url];} ];
+    [self addMenu:@"Background image stream"   withBlk:^(NSURL* url){return [[KSYBgpStreamerVC alloc] initWithUrl:url];} ];
+    [self addMenu:@"Recording short stream of video" withBlk:^(NSURL* url){
         KSYPresetCfgVC *preVC = [[KSYPresetCfgVC alloc]initWithURL:url];
-        [preVC.cfgView.btn0 setTitle:@"开始录制" forState:UIControlStateNormal];
+        [preVC.cfgView.btn0 setTitle:@"Start recording" forState:UIControlStateNormal];
         preVC.cfgView.btn1.enabled = NO;
         preVC.cfgView.btn3.enabled = NO;
         return preVC;}];
 #endif
-    [self addMenu: @"网络探测" withBlk:^(NSURL* url){return [[KSYNetTrackerVC alloc]init];}];
+    [self addMenu: @"Network detection" withBlk:^(NSURL* url){return [[KSYNetTrackerVC alloc]init];}];
 }
 
 - (void)initFrame{
@@ -356,8 +356,8 @@ typedef NS_ENUM(NSInteger, KSYDemoMenuType){
     //添加功能菜单和地址列表的picker
     _pickerMenu = [self addPickerView];
     _pickerAddress = [self addPickerView];
-    _buttonQR     = [self addButton:@"扫描二维码"];
-    _buttonAbout  = [self addButton:@"关于"];
+    _buttonQR     = [self addButton:@"Scan QR code"];
+    _buttonAbout  = [self addButton:@"On"];
     [self initFrame];
     // reload last choise
     _selectMenuRow = [self loadSelectMenuRow];
